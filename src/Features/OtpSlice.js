@@ -1,19 +1,40 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiService from "../api/apiServices";
 
-export const requestOtp = createAsyncThunk("otp/requestOtp", async (data) => {
-  return await apiService.request("otp", "requestOtp", data);
-});
+export const requestOtp = createAsyncThunk(
+  "otp/requestOtp",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await apiService.request("otp", "requestOtp", data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "An unknown error occurred."
+      );
+    }
+  }
+);
 
-export const validateOtp = createAsyncThunk("otp/validateOtp", async (data) => {
-  return await apiService.request("otp", "validateOtp", data);
-});
+export const validateOtp = createAsyncThunk(
+  "otp/validateOtp",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await apiService.request("otp", "validateOtp", data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "An unknown error occurred."
+      );
+    }
+  }
+);
 
 const otpSlice = createSlice({
   name: "otp",
-  initialState: {
+  initialState: { 
     error: null,
     loading: false,
+    user: null,
     isOtpRequest: false,
     isOtpValidate: false,
   },
@@ -30,19 +51,20 @@ const otpSlice = createSlice({
       })
       .addCase(requestOtp.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       })
       .addCase(validateOtp.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(validateOtp.fulfilled, (state) => {
+      .addCase(validateOtp.fulfilled, (state, action) => {
         state.loading = false;
+        state.user = action.payload;
         state.isOtpValidate = true;
       })
       .addCase(validateOtp.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       });
   },
 });

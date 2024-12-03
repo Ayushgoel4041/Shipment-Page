@@ -19,6 +19,7 @@ const EditDeliveryDetails = ({
     { label: "pickupAddress", name: "pickupAddress", disable: false },
     { label: "Source Pincode", name: "sourcePincode", disable: true },
     { label: "Landmark", name: "landmark", disable: false },
+    { }
   ];
   const destinationField = [
     { label: "Business Name", name: "consignee_business_name", disable: false },
@@ -48,8 +49,8 @@ const EditDeliveryDetails = ({
       color: "#745be7",
     },
     "& .MuiOutlinedInput-root": {
-      "& fieldset": { borderColor: "rgba(133,133,133)" },
-      "&:hover fieldset": {
+      "& fieldset": { borderColor: "rgba(133,133,133 , 1)" },
+      "&:hover fieldset": { 
         borderColor: "#745be7",
         boxShadow: "0 2px 10px #bdafff36",
       },
@@ -62,6 +63,9 @@ const EditDeliveryDetails = ({
 
   const handleInputChange = (e) => {
     let { name, value } = e.target;
+    if (name === "email") {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    }
     if (openPickupEditBox)
       setEditPickupAddress((prevData) => ({ ...prevData, [name]: value }));
     if (openDestinationEditBox)
@@ -105,14 +109,16 @@ const EditDeliveryDetails = ({
         <div className="editBoxStyle-head">
           <div className="font-edit-style">Edit Address</div>
           <div>
-            <CloseOutlined onClick={() => handleClose()} style={{cursor:'pointer'}}/>
+            <CloseOutlined
+              onClick={() => handleClose()}
+              style={{ cursor: "pointer" }}
+            />
           </div>
         </div>
         <div className="editbox-body">
           {openPickupEditBox && (
             <div>
               {pickupField?.map((field, index) => (
-
                 <div className="textfield-style">
                   <TextField
                     label={field?.label}
@@ -157,8 +163,12 @@ const EditDeliveryDetails = ({
             </div>
           )}
           <div className="edit-box-action-button-style">
-            <div onClick={() => handleClose()} className="back-style">Cancel</div>
-            <div onClick={() => handleSaveFunction()} className="confirm-style">Save</div>
+            <div onClick={() => handleClose()} className="back-style">
+              Cancel
+            </div>
+            <div onClick={() => handleSaveFunction()} className="confirm-style">
+              Save
+            </div>
           </div>
         </div>
       </Box>

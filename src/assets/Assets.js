@@ -19,6 +19,8 @@ import UnselectSelectCourier from "./Selectcourier_Greyed_out.png";
 import SelectCourier from "./Selectcourier_coloured.png";
 import UnselectShipParcel from "./Shipparcel_Greyed_out.png";
 import SelectShiparcel from "./Shipparcel_coloured.png";
+import SRCargoBlackLogo from './SRCargoBlackLogo.png'
+import loginImageMobile from './loginImageMobile.png'
 
 export default {
   boxImage,
@@ -42,4 +44,6 @@ export default {
   SelectCourier,
   UnselectShipParcel,
   SelectShiparcel,
+  SRCargoBlackLogo,
+  loginImageMobile
 };

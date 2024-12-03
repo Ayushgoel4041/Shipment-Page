@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import VerfifyContacts from "../VerifyContactDetails/VerfifyContacts";
+import React, { useEffect, useState } from "react";
 import RbTable from "../tableComponent/RbTable";
 import { Card, Paper } from "@mui/material";
+import VerifyFunctionality from "../VerifyContactDetails/VerifyFunctionality";
+import { useDispatch, useSelector } from "react-redux";
 
 const CourierSelection = (props) => {
+  // const rateChargeData =
+  //   useSelector((state) => state.cargoUrl.chargesData) || {};
   const [openVerifyContact, setOpenVerifyContact] = useState(false);
 
   const handleOpenVerify = () => {
@@ -44,15 +47,13 @@ const CourierSelection = (props) => {
   const handleBack = () => {
     props.setNext((current) => current - 1);
   };
+  // console.log(rateChargeData, "this is the rate charty fata");
 
   return (
     <div className="courierSelectionDesign">
-      <Card
-        className="card-style noPaperStyle width-fit-card"
-     
-      >
+      <Card className="card-style noPaperStyle width-fit-card">
         <div>
-          <div style={{display:'flex' , gap:'20px' , marginBottom:'10px'}}>
+          <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
             <div>
               <span className="font-bold">From :- </span>location{" "}
             </div>
@@ -64,12 +65,14 @@ const CourierSelection = (props) => {
             </div>
           </div>
 
-          <div style={{marginBottom:'5px'}}>Door Pickup and Door Delivery</div>
-          <div style={{marginBottom:'5px'}}>
+          <div style={{ marginBottom: "5px" }}>
+            Door Pickup and Door Delivery
+          </div>
+          <div style={{ marginBottom: "5px" }}>
             <span className="font-bold">Chargeable Weight:-</span> XX KGS
           </div>
         </div>
-        <div style={{marginBottom:'5px'}}>Insured for Damage and Lost</div>
+        <div style={{ marginBottom: "5px" }}>Insured for Damage and Lost</div>
       </Card>
 
       {/* table */}
@@ -83,7 +86,7 @@ const CourierSelection = (props) => {
               *Frieght is dependent on calculated charge weight and additional
               charges might incur in case of discrepency
             </div>
-            <div style={{ maxWidth: "1000px", fontSize:'12px' }}>
+            <div style={{ maxWidth: "1000px", fontSize: "12px" }}>
               You have selected (Courier Name) , order confirmed before 12PM
               will get scheduled for pickup on same day. Use Transporter ID
               (XXXXXXXXX) to generate Ewaybill
@@ -102,7 +105,7 @@ const CourierSelection = (props) => {
       </Card>
 
       {openVerifyContact && (
-        <VerfifyContacts
+        <VerifyFunctionality
           openVerifyContact={openVerifyContact}
           setOpenVerifyContact={setOpenVerifyContact}
           {...props}

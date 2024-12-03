@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DeliveryDetails from "./DeliveryDetails";
 import InvoiceDetails from "./InvoiceDetails";
 import ValueAddedService from "./ValueAddedService";
-import { Card, Checkbox, FormControlLabel } from "@mui/material";
+import useCurrentWidth from "../../CurrentWidth/UseCurrentWidth";
+
 const CreateShipment = (props) => {
   const [steps, setSteps] = useState(1);
-
-  const handleNext = () => {
-    props?.setNext((current) => current + 1);
-  };
+  const [isMobile, setIsMobile] = useState(false);
+  const [fieldValidation, setFieldValidation] = useState({
+    packageData: false,
+    invoiceData: false,
+    pickupFieldAddress: false,
+  });
+  const width = useCurrentWidth();
+  useEffect(() => {
+    console.log(fieldValidation, "this is the field validation in the system");
+  }, [fieldValidation]);
 
   const handleNextStep = () => {
     setSteps((current) => current + 1);
@@ -17,49 +24,70 @@ const CreateShipment = (props) => {
   const handleBackStep = () => {
     setSteps((current) => current - 1);
   };
+  useEffect(() => {
+    if (width < 850) setIsMobile(true);
+    else setIsMobile(false);
+  }, [width]);
 
   return (
     <div className="background-color-info-head">
-      <DeliveryDetails
-        setSteps={setSteps}
-        steps={steps}
-        handleNextStep={handleNextStep}
-        handleBackStep={handleBackStep}
-      />
-      <InvoiceDetails
-        setSteps={setSteps}
-        steps={steps}
-        handleNextStep={handleNextStep}
-        handleBackStep={handleBackStep}
-      />
-      <ValueAddedService
-        setSteps={setSteps}
-        steps={steps}
-        handleNextStep={handleNextStep}
-        handleBackStep={handleBackStep}
-      />
-      {/* <Card className="card-style"> */}
-      <div className="text-center">
-        <FormControlLabel
-          control={<Checkbox defaultChecked />}
-          className="privacy-policy-style"
-          label="By procedding you agree to SR Cargo's Terms Of Service and Privacy Policy."
-          sx={{
-            "& .MuiFormControlLabel-label": {
-              textAlign: 'left',
-              fontSize: '16px', 
-              fontWeight:"700",
-              color: 'black', 
-            },
-          }}
-        />{" "}
-        <div className="save-select-courier-div">
-          <div onClick={handleNext} className="save-select-button">
-            Save and Select Courier
-          </div>
-        </div>
-      </div>
-      {/* </Card> */}
+      {isMobile ? (
+        <>
+          {steps === 1 && (
+            <DeliveryDetails
+              isMobile={isMobile}
+              setSteps={setSteps}
+              steps={steps}
+              handleNextStep={handleNextStep}
+              handleBackStep={handleBackStep}
+              fieldValidation={fieldValidation}
+              setFieldValidation={setFieldValidation}
+            />
+          )}
+          {steps === 2 && (
+            <InvoiceDetails
+              isMobile={isMobile}
+              setSteps={setSteps}
+              steps={steps}
+              handleNextStep={handleNextStep}
+              handleBackStep={handleBackStep}
+              fieldValidation={fieldValidation}
+              setFieldValidation={setFieldValidation}
+            />
+          )}
+          {steps === 3 && (
+            <ValueAddedService
+              isMobile={isMobile}
+              setSteps={setSteps}
+              steps={steps}
+              handleNextStep={handleNextStep}
+              handleBackStep={handleBackStep}
+              fieldValidation={fieldValidation}
+              setFieldValidation={setFieldValidation}
+              {...props}
+            />
+          )}
+        </>
+      ) : (
+        <>
+          <DeliveryDetails
+            isMobile={isMobile}
+            fieldValidation={fieldValidation}
+            setFieldValidation={setFieldValidation}
+          />
+          <InvoiceDetails
+            isMobile={isMobile}
+            fieldValidation={fieldValidation}
+            setFieldValidation={setFieldValidation}
+          />
+          <ValueAddedService
+            isMobile={isMobile}
+            fieldValidation={fieldValidation}
+            setFieldValidation={setFieldValidation}
+            {...props}
+          />
+        </>
+      )}
     </div>
   );
 };

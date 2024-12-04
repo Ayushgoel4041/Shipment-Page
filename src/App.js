@@ -19,7 +19,7 @@ const App = () => {
   const [hasScrolledOrClicked, setHasScrolledOrClicked] = useState(false);
   const [openVerifyContact, setOpenVerifyContact] = useState(false);
   const [userData, setUserData] = useState();
-
+  const [intialCall, setInitialCall] = useState(true);
   // Function to be called when user scrolls or clicks
 
   const handleScrollOrClick = async () => {
@@ -49,9 +49,11 @@ const App = () => {
 
   useEffect(() => {
     const token = Cookies.get("BearerToken" || "");
-
     if (token) {
-      getFramelessShipmentFunction();
+      if (intialCall) {
+        setInitialCall(false);
+        getFramelessShipmentFunction();
+      }
     } else {
       window.addEventListener("scroll", handleScrollOrClick);
       document.addEventListener("click", handleScrollOrClick);
@@ -61,7 +63,7 @@ const App = () => {
         document.removeEventListener("click", handleScrollOrClick);
       };
     }
-  }, [hasScrolledOrClicked]);
+  }, [hasScrolledOrClicked, intialCall]);
 
   useEffect(() => {
     if (width < 890) {

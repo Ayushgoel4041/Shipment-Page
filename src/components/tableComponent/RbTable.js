@@ -39,7 +39,7 @@ const RbTable = (props) => {
             fontSize: "16px",
           }}
         >
-          <TableHead style={{ backgroundColor: "#F3F3FF" }}>
+          <TableHead style={{ backgroundColor: "#F3F3FF" }} className="customTableColor-style">
             <TableRow className="tableheadStyleNew">
               <TableCell className="textAlignCenter tableHeadCenterStyle">
                 Select

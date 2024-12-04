@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import RbTable from "../tableComponent/RbTable";
-import { Card, Paper } from "@mui/material";
+import { Box, Card, Paper } from "@mui/material";
 import VerifyFunctionality from "../VerifyContactDetails/VerifyFunctionality";
 import { useDispatch, useSelector } from "react-redux";
 import { createOrderId, createRazorPayOrder } from "../../Features/paymentApi";
+import CircularProgress from "@mui/material/CircularProgress";
 import Assets from "../../assets/Assets";
 const CourierSelection = (props) => {
   const dispatch = useDispatch();
@@ -36,11 +37,11 @@ const CourierSelection = (props) => {
       invoice_id: "",
       payment_capture: "1",
     };
-
+    setIsLoading(true);
     try {
       const createOrder = await dispatch(createOrderId(reqObj)).unwrap();
       console.log(createOrder, "this is the create order thing");
-      setIsLoading(true);
+      setIsLoading(false);
       openPayModal(createOrder);
     } catch (error) {
       console.log(error, "this is the error");
@@ -59,13 +60,17 @@ const CourierSelection = (props) => {
       } catch (error) {
         console.log(error, "payment failed");
         props?.setNext(2);
+      } finally {
+        setIsLoading(false);
       }
     }, 2000);
   };
 
   const openPayModal = async (createOrder) => {
+    setIsLoading(true);
     let client_id = clientDetails?.client_id;
     const logo = Assets.srminiLogo;
+
     const options = {
       key: process.env.RAZORPAY_KEY_ID,
       amount: selectedRowData?.rates,
@@ -118,79 +123,92 @@ const CourierSelection = (props) => {
 
   return (
     <div className="courierSelectionDesign">
-      <Card className="card-style noPaperStyle width-fit-card">
-        <div>
-          <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
+      {isLoading ? (
+        <Box className="loading-container">
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <Card className="card-style noPaperStyle width-fit-card">
             <div>
-              <span className="font-bold">
-                From :- {pickupAddress?.city} , {pickupAddress?.state}
-              </span>
-              location
-            </div>
-            <div>
-              <img src="" alt="" />
-            </div>
-            <div>
-              <span className="font-bold">
-                To:- {destinationAddress?.city} , {destinationAddress?.state}
-              </span>
-              Location
-            </div>
-          </div>
+              <div
+                style={{ display: "flex", gap: "20px", marginBottom: "10px" }}
+              >
+                <div>
+                  <span className="font-bold">
+                    From :- {pickupAddress?.city} , {pickupAddress?.state}
+                  </span>
+                  location
+                </div>
+                <div>
+                  <img src="" alt="" />
+                </div>
+                <div>
+                  <span className="font-bold">
+                    To:- {destinationAddress?.city} ,{" "}
+                    {destinationAddress?.state}
+                  </span>
+                  Location
+                </div>
+              </div>
 
-          <div style={{ marginBottom: "5px" }}>
-            Door Pickup and Door Delivery
-          </div>
-          <div style={{ marginBottom: "5px" }}>
-            <span className="font-bold">Chargeable Weight:- </span>{" "}
-            {selectedRowData?.working?.chargeable_weight
-              ? selectedRowData?.working?.chargeable_weight
-              : "XX"}{" "}
-            KGS
-          </div>
-        </div>
-        <div style={{ marginBottom: "5px" }}>Insured for Damage and Lost</div>
-      </Card>
+              <div style={{ marginBottom: "5px" }}>
+                Door Pickup and Door Delivery
+              </div>
+              <div style={{ marginBottom: "5px" }}>
+                <span className="font-bold">Chargeable Weight:- </span>{" "}
+                {selectedRowData?.working?.chargeable_weight
+                  ? selectedRowData?.working?.chargeable_weight
+                  : "XX"}{" "}
+                KGS
+              </div>
+            </div>
+            <div style={{ marginBottom: "5px" }}>
+              Insured for Damage and Lost
+            </div>
+          </Card>
 
-      {/* table */}
-      <Card className="table-courier-style noPaperStyle">
-        <RbTable
-          tableData={rateChargeData}
-          setSelectedRowData={setSelectedRowData}
-        />
-      </Card>
-      <Card className="card-style noPaperStyle">
-        <div className="bottom-courier-box">
-          <div>
-            <div style={{ fontWeight: "600", marginBottom: "10px" }}>
-              *Frieght is dependent on calculated charge weight and additional
-              charges might incur in case of discrepency
-            </div>
-            <div style={{ maxWidth: "1000px", fontSize: "12px" }}>
-              You have selected (Courier Name) , order confirmed before 12PM
-              will get scheduled for pickup on same day. Use Transporter ID
-              (XXXXXXXXX) to generate Ewaybill
-            </div>
-          </div>
+          {/* table */}
+          <Card className="table-courier-style noPaperStyle">
+            <RbTable
+              tableData={rateChargeData}
+              setSelectedRowData={setSelectedRowData}
+            />
+          </Card>
+          <Card className="card-style noPaperStyle">
+            <div className="bottom-courier-box">
+              <div>
+                <div style={{ fontWeight: "600", marginBottom: "10px" }}>
+                  *Frieght is dependent on calculated charge weight and
+                  additional charges might incur in case of discrepency
+                </div>
+                <div style={{ maxWidth: "1000px", fontSize: "12px" }}>
+                  You have selected (Courier Name) , order confirmed before 12PM
+                  will get scheduled for pickup on same day. Use Transporter ID
+                  (XXXXXXXXX) to generate Ewaybill
+                </div>
+              </div>
 
-          <div className="button-courier-style">
-            <div onClick={handleBack} className="back-style">
-              Back
+              <div className="button-courier-style">
+                <div onClick={handleBack} className="back-style">
+                  Back
+                </div>
+                <div onClick={handleOpenVerify} className="confirm-style">
+                  Confirm
+                </div>
+              </div>
             </div>
-            <div onClick={handleOpenVerify} className="confirm-style">
-              Confirm
-            </div>
-          </div>
-        </div>
-      </Card>
+          </Card>
 
-      {openVerifyContact && (
-        <VerifyFunctionality
-          openVerifyContact={openVerifyContact}
-          setOpenVerifyContact={setOpenVerifyContact}
-          setIsRecharge={setIsRecharge}
-          {...props}
-        />
+          {openVerifyContact && (
+            <VerifyFunctionality
+              openVerifyContact={openVerifyContact}
+              setOpenVerifyContact={setOpenVerifyContact}
+              setIsRecharge={setIsRecharge}
+              {...props}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -103,10 +103,23 @@ const DeliveryDetails = (props) => {
       Object?.keys(storedPickupAddress)?.length > 0 &&
       Object?.keys(storedDestinationAddress)?.length > 0 &&
       props?.isMobile
-    )
+    ) {
       setMobileLocalStorageValue(true);
+    }
   }, [editSave]);
-
+  useEffect(() => {
+    if (  
+      showPickupDetailedAddress &&
+      showDestinationDetailedAddress &&
+      props?.isMobile
+    ) {
+      setMobileLocalStorageValue(true);
+    }
+  }, [
+    showPickupDetailedAddress,
+    showDestinationDetailedAddress,
+    props?.isMobile,
+  ]);
   useEffect(() => {
     if (pickupPinCodeVerified && destinationPinCodeVerified)
       setCodeConfirm(true);

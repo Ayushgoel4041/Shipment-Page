@@ -12,7 +12,7 @@ export const getFramelessShipment = createAsyncThunk(
         null,
         null
       );
-      return response.data; // Return the API response
+      return response; // Return the API response
     } catch (error) {
       const errorMsg =
         error.response?.data?.message ||
@@ -34,7 +34,7 @@ export const shipmentCharge = createAsyncThunk(
         null,
         null
       );
-      return response.data; // Return the API response
+      return response; // Return the API response
     } catch (error) {
       const errorMsg =
         error.response?.data?.message ||

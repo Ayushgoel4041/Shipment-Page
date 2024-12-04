@@ -115,7 +115,7 @@ const VerifyContact = (props) => {
       >
         {isMobile && (
           <div className="padding">
-            <CloseIcon onClick={handleClose} />
+            {/* <CloseIcon onClick={handleClose} /> */}
           </div>
         )}
         <img

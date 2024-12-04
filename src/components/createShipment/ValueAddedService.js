@@ -57,6 +57,11 @@ const ValueAddedService = (props) => {
   };
 
   const handleNext = async () => {
+    const valueAddedData = {
+      is_insured: valueAddedService?.secureShipment,
+      is_appointment_taken: valueAddedService?.appointmentDelivery,
+    };
+    localStorage.setItem("valueAddedData", JSON.stringify(valueAddedData));
     const pickupAddress =
       JSON.parse(localStorage.getItem("pickupAddress")) || {};
     const destinationAddress =
@@ -75,7 +80,7 @@ const ValueAddedService = (props) => {
       calculator_page: "true",
       from_pincode: pickupAddress?.sourcePincode,
       from_city: pickupAddress?.city || "noida",
-      from_state: pickupAddress?.state || "uttarpradesh", 
+      from_state: pickupAddress?.state || "uttarpradesh",
       to_pincode: destinationAddress?.sourcePincode,
       to_city: destinationAddress?.city || "greaternoida",
       to_state: destinationAddress?.state || "delhi",
@@ -93,7 +98,6 @@ const ValueAddedService = (props) => {
 
     try {
       const chargesResponse = await dispatch(shipmentCharge(data)).unwrap();
-      console.log(chargesResponse, "This is charge response");
       props?.setNext((current) => current + 1);
     } catch (error) {
       console.log(error, "This is the error of shipment charges");
@@ -271,6 +275,27 @@ const ValueAddedService = (props) => {
             )}
           </Grid>
         </Grid>
+
+        {props?.isMobile && (
+          <div className="click-on-page">
+            {props?.steps !== 1 && (
+              <div
+                className="back-click-on-page"
+                onClick={() => props?.steps > 1 && props?.handleBackStep()}
+              >
+                Back
+              </div>
+            )}
+            {props?.steps !== 3 && (
+              <div
+                className="next-click-on-page"
+                onClick={() => props?.steps < 3 && props?.handleNextStep()}
+              >
+                Next
+              </div>
+            )}
+          </div>
+        )}
       </Card>
       <div className="text-center">
         <FormControlLabel

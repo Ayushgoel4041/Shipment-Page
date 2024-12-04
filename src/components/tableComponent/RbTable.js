@@ -15,28 +15,39 @@ import React, { useState } from "react";
 const RbTable = (props) => {
   const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
 
-  const handleRowClick = (index) => {
-    setSelectedRowIndex(selectedRowIndex === index ? -1 : index);
+  const handleRowClick = (index, row) => {
+    const isSameRowSelected = selectedRowIndex === index;
+    setSelectedRowIndex(isSameRowSelected ? -1 : index);
+    props?.setSelectedRowData(isSameRowSelected ? null : row);
   };
 
-  console.log(props.tableData, "this is th data");
+  console.log(props?.tableData, "this is th data");
   return (
     <Grid container>
       <Grid item xs={12}>
+      <div
+       className="table-overflow-design"
+          style={{
+            // Enables horizontal scrolling
+          
+          }}
+        >
         <Table
           style={{
             borderCollapse: "separate",
             borderSpacing: "0 15px",
-            width: "100%",
             fontSize: "16px",
           }}
         >
-          <TableHead>
+          <TableHead style={{ backgroundColor: "#F3F3FF" }}>
             <TableRow className="tableheadStyleNew">
               <TableCell className="textAlignCenter tableHeadCenterStyle">
                 Select
               </TableCell>
-              <TableCell className="textAlignCenter tableHeadCenterStyle">
+              <TableCell
+                className="textAlignCenter tableHeadCenterStyle"
+                colSpan={2}
+              >
                 Logistic Partner
               </TableCell>
               <TableCell className="textAlignCenter tableHeadCenterStyle">
@@ -48,26 +59,29 @@ const RbTable = (props) => {
               <TableCell className="textAlignCenter tableHeadCenterStyle">
                 Schedule Pick-up
               </TableCell>
+              <TableCell className="textAlignCenter tableHeadCenterStyle">
+                Transporter ID
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {props?.tableData.map((row, index) => (
+            {Object.values(props?.tableData)?.map((row, index) => (
               <TableRow
-                key={row.id}
+                key={row?.id}
                 style={{
                   backgroundColor: "#ffffff",
                 }}
                 className={`tableBodyStyle ${
                   selectedRowIndex === index && "selected-style-table"
                 }`}
-                onClick={() => handleRowClick(index)}
+                onClick={() => handleRowClick(index, row)}
               >
                 <TableCell className="tableBodyCellStyle textAlignCenter">
                   <FormControlLabel
                     control={
                       <Checkbox
                         checked={selectedRowIndex === index}
-                        onChange={() => handleRowClick(index)}
+                        onChange={() => handleRowClick(index, row)}
                         icon={
                           <CheckBox
                             sx={{
@@ -83,22 +97,31 @@ const RbTable = (props) => {
                   />
                 </TableCell>
                 <TableCell className="tableBodyCellStyle textAlignCenter">
-                  {row.logisticPartner}
+                  <div className="image-space-style">
+                    <img src={row?.logo} className="logo-charge-style" />
+                  </div>
                 </TableCell>
                 <TableCell className="tableBodyCellStyle textAlignCenter">
-                  {row.frieghtCost}
+                  {row?.delivery_partner}
                 </TableCell>
                 <TableCell className="tableBodyCellStyle textAlignCenter">
-                  {row.tat}
+                  ₹{row?.working?.freight}
                 </TableCell>
                 <TableCell className="tableBodyCellStyle textAlignCenter">
-                  {row.SchedulePick}
+                  {row?.tat}
+                </TableCell>
+                <TableCell className="tableBodyCellStyle textAlignCenter">
+                  {row?.pickup_date}
+                </TableCell>
+                <TableCell className="tableBodyCellStyle textAlignCenter">
+                  {row?.transporter_id}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
         {/* </Paper> */}
+        </div>
       </Grid>
     </Grid>
   );

@@ -122,8 +122,9 @@ const InvoiceDetails = (props) => {
         <div className="package_details_style">
           <div className="justify-center-style">
             {!props?.isMobile && (
-              <div className="box-image-style">
-                <img src={Assets.boxImage} alt="box image" />
+              // <div className="box-image-style">
+                <div>
+                <img src={Assets.boxImage} alt="box image" style={{width:'300px' , height:"300px"}}/>
               </div>
             )}
           </div>

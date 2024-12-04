@@ -4,8 +4,23 @@ body {
   box-sizing: border-box;
   background-color: rgb(238, 238, 238);
 }
-.font-disable-color{
- color: rgba(158,158,158,1) !important;
+.logo-charge-style {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+.image-space-style {
+  /* margin-left: -30px; */
+}
+.display-flex-name {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: 30px;
+  margin-left: 15%;
+}
+.font-disable-color {
+  color: rgba(158, 158, 158, 1) !important;
 }
 .subHeading-style {
   font-size: 24px;
@@ -117,11 +132,10 @@ body {
 }
 .card-style-disable {
   cursor: not-allowed;
-  background-color: grey ;
+  background-color: grey;
   margin: 25px 50px;
   padding: 50px;
-  --Paper-shadow: 0px 0px 0px 0px !important; 
-
+  --Paper-shadow: 0px 0px 0px 0px !important;
 }
 .noPaperStyle {
   --Paper-shadow: "none" !important;
@@ -172,7 +186,7 @@ body {
 }
 .tableheadStyleNew {
   box-shadow: 0 7px 29px 0 hsla(240, 5%, 41%, 0.2);
-  background-color: transparent;
+  background-color: #f3f3ff;
 }
 
 .textAlignCenter {
@@ -200,11 +214,11 @@ body {
   }
 }
 .tableBodyStyle:hover {
-  background-color: #c9c9d3 !important;
+  background-color: #e9e9e9 !important;
   cursor: pointer;
-  .tableBodyCellStyle {
+  /* .tableBodyCellStyle {
     color: white;
-  }
+  } */
 }
 .flex-style-column {
   display: flex;
@@ -363,7 +377,17 @@ body {
   border-radius: 10px;
   cursor: pointer;
 }
-.save-select-button-disable{
+.ship-parcel-style {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.ship-parcel-font {
+  font-size: 24px;
+  font-weight: 700;
+}
+.save-select-button-disable {
   background-color: #2d2d6790 !important;
 
   cursor: not-allowed !important;
@@ -394,6 +418,7 @@ body {
 .drawerWidth {
   padding: 20px;
   background-image: url("./assets/loginSRBackground.png");
+  left: 0 !important;
 }
 .verify-otp-box-style {
   display: flex;
@@ -473,6 +498,9 @@ body {
 }
 .table-courier-style {
   margin: 0px 50px;
+  background-color: transparent !important;
+}
+.table-overflow-design {
 }
 .width-fit-card {
   width: fit-content;
@@ -608,6 +636,7 @@ body {
   display: flex;
   justify-content: space-around;
   margin-top: 20px;
+  gap: 20px;
 }
 .textfield-style {
   margin: 20px 0px;
@@ -705,7 +734,6 @@ body {
   .card-style-disable {
     margin: 25px;
     padding: 25px;
-  
   }
   .steps-card-style {
     margin: 25px;
@@ -739,6 +767,8 @@ body {
   }
   .table-courier-style {
     margin: 0px 25px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -785,6 +815,15 @@ body {
   }
 }
 
+@media (max-width: 680px) {
+  .table-overflow-design {
+    overflow: auto;
+    max-width: 600px;
+  }
+  .edit-box-action-button-style {
+    flex-direction: column;
+  }
+}
 @media (max-width: 600px) {
   .Heading-style {
     font-size: 1.5rem;
@@ -808,7 +847,6 @@ body {
   .card-style-disable {
     margin: 15px;
     padding: 20px;
-  
   }
   .table-courier-style {
     margin: 0px 15px;
@@ -819,5 +857,16 @@ body {
   }
   .text-center {
     margin: 20px 15px;
+  }
+  .table-overflow-design {
+    overflow: auto;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 400px) {
+  .table-overflow-design {
+    overflow: auto;
+    max-width: 370px;
   }
 }

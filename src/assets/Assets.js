@@ -21,7 +21,7 @@ import UnselectShipParcel from "./Shipparcel_Greyed_out.png";
 import SelectShiparcel from "./Shipparcel_coloured.png";
 import SRCargoBlackLogo from './SRCargoBlackLogo.png'
 import loginImageMobile from './loginImageMobile.png'
-
+import tickMarkGif from './Tick_mark.gif'
 export default {
   boxImage,
   delivery,
@@ -45,5 +45,6 @@ export default {
   UnselectShipParcel,
   SelectShiparcel,
   SRCargoBlackLogo,
+  tickMarkGif,
   loginImageMobile
 };

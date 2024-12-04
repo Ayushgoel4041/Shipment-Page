@@ -27,5 +27,25 @@ export const apiConfig = {
       url: "shipment/charges/",
       method: "POST",
     },
+    createPayment: {
+      url: "payments/order/create/",
+      method: "POST",
+    },
+    razorpayOrderCreate: {
+      url: "payments/razorpay/order/create/",
+      method: "POST",
+    },
+    kycDocUpload: {
+      url: "kyc-doc-upload/",
+      method: "POST",
+    },
+    gstRequestOtp:{
+      url: "generate-kyc-otp/",
+      method: "POST",
+    },
+    gstValidateOtp:{
+      url: "verify-kyc-otp/",
+      method: "POST",
+    }
   },
 };

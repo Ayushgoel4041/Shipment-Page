@@ -20,6 +20,7 @@ const DeliveryDetails = (props) => {
   const loading = useSelector((state) => state.otp.loading);
   const error = useSelector((state) => state.otp.error);
   const [pickupLocationData, setPickupLocationData] = useState({});
+  const [destinationLocationData, setDestinationLocationData] = useState({});
   const fields = [
     { label: "Landmark", name: "landmark" },
     { label: "Name", name: "name" },
@@ -46,12 +47,16 @@ const DeliveryDetails = (props) => {
   const [opendownPickup, setOpenDownPickup] = useState(false);
   const [opendownDestination, setOpenDownDestination] = useState(false);
 
+  const [mobilePickupBox, setMobilePickupBox] = useState(true);
+  const [mobileLocalStorageValue, setMobileLocalStorageValue] = useState(false);
   const handleInputPickupPincodeChange = async (e) => {
     const { name, value } = e.target;
     const pinCode = e.target.value.replace(/[^0-9]/g, "");
     setPickupAddress((prevData) => ({ ...prevData, [name]: value }));
 
     if (pinCode.length === 6) {
+      // setPickupPinCodeVerified(true);
+
       try {
         const locationData = await dispatch(
           getLocationFromPincode(pinCode)
@@ -60,15 +65,18 @@ const DeliveryDetails = (props) => {
         setPickupPinCodeVerified(true);
       } catch (error) {
         console.log(error, "this is error");
-        setPickupPinCodeVerified(true);
-
-        // setPickupPinCodeVerified(false);
+        setPickupPinCodeVerified(false);
       }
     } else {
       setPickupPinCodeVerified(false);
     }
   };
-  console.log(pickupLocationData, "this is pickuplocation data");
+  // this is setting the location
+  console.log(
+    pickupLocationData,
+    destinationLocationData,
+    "this is pickuplocation data"
+  );
   // value to get pickup and destintion address from localstorage
   useEffect(() => {
     const storedPickupAddress =
@@ -76,6 +84,7 @@ const DeliveryDetails = (props) => {
     if (Object?.keys(storedPickupAddress)?.length > 0) {
       setPickupAddress(storedPickupAddress);
       setShowPickupDetailedAddress(true);
+
       if ((storedPickupAddress?.sourcePincode).length === 6) {
         setPickupPinCodeVerified(true);
       }
@@ -85,10 +94,17 @@ const DeliveryDetails = (props) => {
     if (Object?.keys(storedDestinationAddress)?.length > 0) {
       setDestinationAddress(storedDestinationAddress);
       setShowDestinationDetailedAddress(true);
+
       if ((storedDestinationAddress?.sourcePincode).length === 6) {
         setDestinationPinCodeVerified(true);
       }
     }
+    if (
+      Object?.keys(storedPickupAddress)?.length > 0 &&
+      Object?.keys(storedDestinationAddress)?.length > 0 &&
+      props?.isMobile
+    )
+      setMobileLocalStorageValue(true);
   }, [editSave]);
 
   useEffect(() => {
@@ -102,13 +118,22 @@ const DeliveryDetails = (props) => {
     setPickupFieldValidation({});
   };
 
-  const handleInputDestinationPincodeChange = (e) => {
+  const handleInputDestinationPincodeChange = async (e) => {
     const { name, value } = e.target;
     const pinCode = e.target.value.replace(/[^0-9]/g, "");
     setDestinationAddress((prevData) => ({ ...prevData, [name]: value }));
 
     if (pinCode.length === 6) {
-      setDestinationPinCodeVerified(true);
+      try {
+        const locationData = await dispatch(
+          getLocationFromPincode(pinCode)
+        ).unwrap();
+        setDestinationLocationData(locationData);
+        setDestinationPinCodeVerified(true);
+      } catch (error) {
+        console.log(error, "this is error");
+        setDestinationPinCodeVerified(false);
+      }
     } else {
       setDestinationPinCodeVerified(false);
     }
@@ -188,6 +213,9 @@ const DeliveryDetails = (props) => {
       setShowPickupDetailedAddress(true);
       setOpenDownPickup(false);
       setPickUpAddressLocalStorgae();
+      if (props?.isMobile) {
+        setMobilePickupBox(false);
+      }
     }
   };
 
@@ -237,7 +265,7 @@ const DeliveryDetails = (props) => {
         ...prevData,
         destinationFieldAddress: false,
       }));
-
+      setMobileLocalStorageValue(true);
       setShowDestinationDetailedAddress(true);
       setOpenDownDestination(false);
       setDestinationAddressLocalStorage();
@@ -264,7 +292,7 @@ const DeliveryDetails = (props) => {
       Object.keys(destinationFieldValidation).length === 0 &&
       Object.keys(destinationAddress).length !== 0;
 
-      props?.setFieldValidation((prev) => ({
+    props?.setFieldValidation((prev) => ({
       ...prev,
       pickupFieldAddress: isValidPickup && isValidDestination,
     }));
@@ -274,91 +302,94 @@ const DeliveryDetails = (props) => {
     pickupAddress,
     destinationAddress,
   ]);
+  useEffect(() => {
+    if (props?.isMobile) {
+      setCodeConfirm(true);
+      setOpenDownPickup(true);
+      setOpenDownDestination(true);
+    }
+  }, [props?.isMobile]);
 
-  return (
-    <Card className="card-style">
-      {" "}
-      {props?.isMobile && (
-        <div className="top-stepper-style">{props?.steps}/3</div>
-      )}
-      <div className="Heading-style">Pickup and Delivery Address</div>
-      <Grid container spacing={{ lg: 8, md: 4, xs: 2 }}>
-        <Grid
-          item
-          className="pickup-address-style flex-style-column"
-          xs={12}
-          md={6}
-          lg={6}
-        >
-          {!showPickupDetailedAddress && (
-            <>
-              <TextField
-                label="Source Pincode"
-                variant="outlined"
-                size="small"
-                name="sourcePincode"
-                onChange={handleInputPickupPincodeChange}
-                fullWidth
-                value={pickupAddress.sourcePincode || ""}
-                sx={textFieldStyles}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      {pickupPinCodeVerified && (
-                        <>
-                          {/* <EditIcon
-                        color="action"
-                        fontSize="small"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleClickEditPincode(1)}
-                      />{" "} */}
-                          <CheckIcon
-                            color="success"
-                            style={{ cursor: "pointer" }}
-                          />
-                        </>
-                      )}
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  pattern: "[0-9]*",
-                  maxLength: 6,
-                }}
-              />
+  const detailedPickupAddressBox = () => {
+    return (
+      <Box className="address-detail-box-style">
+        <div>
+          <div>
+            <span className="businessName-style">Pickup Pincode:-</span>
+            <span>{pickupAddress?.sourcePincode}</span>{" "}
+          </div>
+          <div className="businessName-style">
+            {pickupAddress?.consignor_business_name}{" "}
+          </div>
+          <div className="subtext-box-style">{pickupAddress?.name}</div>
+          <div className="subtext-box-style">
+            {pickupAddress?.pickupAddress}
+          </div>
+          <div className="subtext-box-style">
+            <span> Contact:- </span> {pickupAddress?.contactNumber}
+          </div>
+        </div>
+        <div>
+          <EditIcon
+            style={{ cursor: "pointer" }}
+            onClick={() => setOpenPickupEditBox(true)}
+          />
+        </div>
+      </Box>
+    );
+  };
+  const pickupAddressbox = () => {
+    return (
+      <Grid
+        item
+        className="pickup-address-style flex-style-column"
+        xs={12}
+        md={6}
+        lg={6}
+      >
+        {!showPickupDetailedAddress && (
+          <>
+            <TextField
+              label="Source Pincode"
+              variant="outlined"
+              size="small"
+              name="sourcePincode"
+              onChange={handleInputPickupPincodeChange}
+              fullWidth
+              value={pickupAddress.sourcePincode || ""}
+              sx={textFieldStyles}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {pickupPinCodeVerified && (
+                      <>
+                        {/* <EditIcon
+                  color="action"
+                  fontSize="small"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleClickEditPincode(1)}
+                />{" "} */}
+                        <CheckIcon
+                          color="success"
+                          style={{ cursor: "pointer" }}
+                        />
+                      </>
+                    )}
+                  </InputAdornment>
+                ),
+              }}
+              inputProps={{
+                pattern: "[0-9]*",
+                maxLength: 6,
+              }}
+            />
 
-              <Typography className="font1">Enter 6 digit pincode</Typography>
-            </>
-          )}
+            <Typography className="font1">Enter 6 digit pincode</Typography>
+          </>
+        )}
 
-          {showPickupDetailedAddress ? (
-            <Collapse in={showPickupDetailedAddress} timeout={800}>
-              <Box className="address-detail-box-style">
-                <div>
-                  <div>
-                    <span className="businessName-style">Pickup Pincode:-</span>
-                    <span>{pickupAddress?.sourcePincode}</span>{" "}
-                  </div>
-                  <div className="businessName-style">
-                    {pickupAddress?.consignor_business_name}{" "}
-                  </div>
-                  <div className="subtext-box-style">{pickupAddress?.name}</div>
-                  <div className="subtext-box-style">
-                    {pickupAddress?.pickupAddress}
-                  </div>
-                  <div className="subtext-box-style">
-                    <span> Contact:- </span> {pickupAddress?.contactNumber}
-                  </div>
-                </div>
-                <div>
-                  <EditIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setOpenPickupEditBox(true)}
-                  />
-                </div>
-              </Box>
-            </Collapse>
-          ) : (
+        {!showPickupDetailedAddress && (
+          <>
             <TransitionGroup>
               {confirm && (
                 <Collapse in={confirm} timeout={800}>
@@ -404,172 +435,175 @@ const DeliveryDetails = (props) => {
                 </Collapse>
               )}
             </TransitionGroup>
-          )}
-          <TransitionGroup>
-            {opendownPickup && (
-              <Collapse in={opendownPickup} timeout={800}>
-                <TextField
-                  label="Consignor Business Name"
-                  variant="outlined"
-                  size="small"
-                  className="inputField_style"
-                  name="consignor_business_name"
-                  onChange={pickupHandleChange}
-                  error={pickupFieldValidation?.consignor_business_name}
-                  sx={textFieldStyles}
-                />
-                <div className="grid-style">
-                  {fields.slice(0, 1).map((field, index) => (
-                    <TextField
-                      label={field.label}
-                      variant="outlined"
-                      size="small"
-                      className="inputField_style"
-                      name={field?.name}
-                      onChange={pickupHandleChange}
-                      sx={{
-                        "& label.Mui-focused": { color: "#745be7" },
-                        "& .MuiOutlinedInput-root": {
-                          "& fieldset": {
-                            borderColor: "rgba(108,108,108)",
-                          },
-                          "&:hover fieldset": { borderColor: "#745be7" },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#745be7",
-                          },
-                        },
-                      }}
-                    />
-                  ))}
 
-                  {fields.slice(1).map((field, index) => (
-                    <TextField
-                      label={field.label}
-                      variant="outlined"
-                      size="small"
-                      className="inputField_style"
-                      name={field?.name}
-                      onChange={pickupHandleChange}
-                      error={pickupFieldValidation[field.name]}
-                      sx={textFieldStyles}
-                    />
-                  ))}
-                </div>
-              </Collapse>
-            )}
-          </TransitionGroup>
-          <TransitionGroup>
-            {opendownPickup && (
-              <Collapse in={opendownPickup} timeout={800}>
-                <div className="addDiv_Style">
-                  <div
-                    className="Add_Submit_button_style"
-                    onClick={handlePickupAddbutton}
-                  >
-                    Add & Submit
+            <TransitionGroup>
+              {opendownPickup && (
+                <Collapse in={opendownPickup} timeout={800}>
+                  <TextField
+                    label="Consignor Business Name"
+                    variant="outlined"
+                    size="small"
+                    className="inputField_style"
+                    name="consignor_business_name"
+                    onChange={pickupHandleChange}
+                    error={pickupFieldValidation?.consignor_business_name}
+                    sx={textFieldStyles}
+                  />
+                  <div className="grid-style">
+                    {fields.slice(0, 1).map((field, index) => (
+                      <TextField
+                        label={field.label}
+                        variant="outlined"
+                        size="small"
+                        className="inputField_style"
+                        name={field?.name}
+                        onChange={pickupHandleChange}
+                        sx={{
+                          "& label.Mui-focused": { color: "#745be7" },
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(108,108,108)",
+                            },
+                            "&:hover fieldset": { borderColor: "#745be7" },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#745be7",
+                            },
+                          },
+                        }}
+                      />
+                    ))}
+
+                    {fields.slice(1).map((field, index) => (
+                      <TextField
+                        label={field.label}
+                        variant="outlined"
+                        size="small"
+                        className="inputField_style"
+                        name={field?.name}
+                        onChange={pickupHandleChange}
+                        error={pickupFieldValidation[field.name]}
+                        sx={textFieldStyles}
+                      />
+                    ))}
                   </div>
-                </div>
-              </Collapse>
-            )}
-          </TransitionGroup>
-        </Grid>
+                </Collapse>
+              )}
+            </TransitionGroup>
+            <TransitionGroup>
+              {opendownPickup && (
+                <Collapse in={opendownPickup} timeout={800}>
+                  <div className="addDiv_Style">
+                    <div
+                      className="Add_Submit_button_style"
+                      onClick={handlePickupAddbutton}
+                    >
+                      Add & Submit
+                    </div>
+                  </div>
+                </Collapse>
+              )}
+            </TransitionGroup>
+          </>
+        )}
+      </Grid>
+    );
+  };
 
-        <Grid
-          item
-          className="pickup-address-style flex-style-column"
-          xs={12}
-          md={6}
-          lg={6}
-        >
-          {!showDestinationDetailedAddress && (
-            <>
-              <TextField
-                label="Destination Pincode"
-                variant="outlined"
-                fullWidth
-                size="small"
-                name="sourcePincode"
-                sx={textFieldStyles}
-                value={destinationAddress.sourcePincode || ""}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      {destinationPinCodeVerified && (
-                        <>
-                          {/* EditIcon<
+  const detailedDestinationAddressBox = () => {
+    return (
+      <Box className="address-detail-box-style">
+        <div>
+          <div>
+            <span className="businessName-style"> Destination Pincode:-</span>
+            <span>{destinationAddress?.sourcePincode}</span>{" "}
+          </div>
+          <div className="businessName-style">
+            {destinationAddress?.consignee_business_name}{" "}
+          </div>
+          <div className="subtext-box-style">{destinationAddress?.name}</div>
+          <div className="subtext-box-style">
+            {destinationAddress?.deliveredAddress}
+          </div>
+          <div className="subtext-box-style">
+            <span> Contact:- </span> {destinationAddress?.contactNumber}
+          </div>
+        </div>
+        <div>
+          <EditIcon
+            style={{ cursor: "pointer" }}
+            onClick={() => setOpenDestinationEditBox(true)}
+          />
+        </div>
+      </Box>
+    );
+  };
+  const destinationAddressBox = () => {
+    return (
+      <Grid
+        item
+        className="pickup-address-style flex-style-column"
+        xs={12}
+        md={6}
+        lg={6}
+      >
+        {!showDestinationDetailedAddress && (
+          <>
+            <TextField
+              label="Destination Pincode"
+              variant="outlined"
+              fullWidth
+              size="small"
+              name="sourcePincode"
+              sx={textFieldStyles}
+              value={destinationAddress.sourcePincode || ""}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {destinationPinCodeVerified && (
+                      <>
+                        {/* EditIcon<
                         color="action"
                         fontSize="small"
                         style={{ cursor: "pointer" }}
                         onClick={() => handleClickEditPincode(2)}
                       />{" "} */}
-                          <CheckIcon
-                            color="success"
-                            style={{ cursor: "pointer" }}
-                          />
-                        </>
-                      )}
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  pattern: "[0-9]*",
-                  maxLength: 6,
-                  onInput: handleInputDestinationPincodeChange,
-                }}
-              />
-              <Typography className="font1">Enter 6 digit pincode</Typography>
-            </>
-          )}
+                        <CheckIcon
+                          color="success"
+                          style={{ cursor: "pointer" }}
+                        />
+                      </>
+                    )}
+                  </InputAdornment>
+                ),
+              }}
+              inputProps={{
+                pattern: "[0-9]*",
+                maxLength: 6,
+                onInput: handleInputDestinationPincodeChange,
+              }}
+            />
+            <Typography className="font1">Enter 6 digit pincode</Typography>
+          </>
+        )}
 
-          {openPickupEditBox && (
-            <EditDeliveryDetails
-              pickupAddress={pickupAddress}
-              openPickupEditBox={openPickupEditBox}
-              setOpenPickupEditBox={setOpenPickupEditBox}
-              setEditSave={setEditSave}
-            />
-          )}
-          {openDestinationEditBox && (
-            <EditDeliveryDetails
-              destinationAddress={destinationAddress}
-              openDestinationEditBox={openDestinationEditBox}
-              setOpenDestinationEditBox={setOpenDestinationEditBox}
-              setEditSave={setEditSave}
-            />
-          )}
-          {showDestinationDetailedAddress ? (
-            <Collapse in={showDestinationDetailedAddress} timeout={800}>
-              <Box className="address-detail-box-style">
-                <div>
-                  <div>
-                    <span className="businessName-style">
-                      {" "}
-                      Destination Pincode:-
-                    </span>
-                    <span>{destinationAddress?.sourcePincode}</span>{" "}
-                  </div>
-                  <div className="businessName-style">
-                    {destinationAddress?.consignee_business_name}{" "}
-                  </div>
-                  <div className="subtext-box-style">
-                    {destinationAddress?.name}
-                  </div>
-                  <div className="subtext-box-style">
-                    {destinationAddress?.deliveredAddress}
-                  </div>
-                  <div className="subtext-box-style">
-                    <span> Contact:- </span> {destinationAddress?.contactNumber}
-                  </div>
-                </div>
-                <div>
-                  <EditIcon
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setOpenDestinationEditBox(true)}
-                  />
-                </div>
-              </Box>
-            </Collapse>
-          ) : (
+        {openPickupEditBox && (
+          <EditDeliveryDetails
+            pickupAddress={pickupAddress}
+            openPickupEditBox={openPickupEditBox}
+            setOpenPickupEditBox={setOpenPickupEditBox}
+            setEditSave={setEditSave}
+          />
+        )}
+        {openDestinationEditBox && (
+          <EditDeliveryDetails
+            destinationAddress={destinationAddress}
+            openDestinationEditBox={openDestinationEditBox}
+            setOpenDestinationEditBox={setOpenDestinationEditBox}
+            setEditSave={setEditSave}
+          />
+        )}
+        {!showDestinationDetailedAddress && (
+          <>
             <TransitionGroup>
               {confirm && (
                 <Collapse in={confirm} timeout={800}>
@@ -615,96 +649,183 @@ const DeliveryDetails = (props) => {
                 </Collapse>
               )}
             </TransitionGroup>
-          )}
 
-          <TransitionGroup>
-            {opendownDestination && (
-              <Collapse in={opendownDestination} timeout={800}>
-                <TextField
-                  label="Consignee Business Name"
-                  variant="outlined"
-                  size="small"
-                  className="inputField_style"
-                  name="consignee_business_name"
-                  onChange={destinationHandleChange}
-                  error={destinationFieldValidation?.consignee_business_name}
-                  sx={textFieldStyles}
-                />
-                <div className="grid-style">
-                  {fields.slice(0, 1).map((field, index) => (
-                    <TextField
-                      label={field.label}
-                      variant="outlined"
-                      size="small"
-                      name={field?.name}
-                      className="inputField_style"
-                      onChange={destinationHandleChange}
-                      sx={{
-                        "& label.Mui-focused": { color: "#745be7" },
-                        "& .MuiOutlinedInput-root": {
-                          "& fieldset": {
-                            borderColor: "rgba(108,108,108)",
+            <TransitionGroup>
+              {opendownDestination && (
+                <Collapse in={opendownDestination} timeout={800}>
+                  <TextField
+                    label="Consignee Business Name"
+                    variant="outlined"
+                    size="small"
+                    className="inputField_style"
+                    name="consignee_business_name"
+                    onChange={destinationHandleChange}
+                    error={destinationFieldValidation?.consignee_business_name}
+                    sx={textFieldStyles}
+                  />
+                  <div className="grid-style">
+                    {fields.slice(0, 1).map((field, index) => (
+                      <TextField
+                        label={field.label}
+                        variant="outlined"
+                        size="small"
+                        name={field?.name}
+                        className="inputField_style"
+                        onChange={destinationHandleChange}
+                        sx={{
+                          "& label.Mui-focused": { color: "#745be7" },
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(108,108,108)",
+                            },
+                            "&:hover fieldset": { borderColor: "#745be7" },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#745be7",
+                            },
                           },
-                          "&:hover fieldset": { borderColor: "#745be7" },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#745be7",
-                          },
-                        },
-                      }}
-                    />
-                  ))}
+                        }}
+                      />
+                    ))}
 
-                  {fields.slice(1).map((field, index) => (
-                    <TextField
-                      label={field.label}
-                      variant="outlined"
-                      size="small"
-                      name={field?.name}
-                      className="inputField_style"
-                      error={destinationFieldValidation[field?.name]}
-                      onChange={destinationHandleChange}
-                      sx={textFieldStyles}
-                    />
-                  ))}
-                </div>
-              </Collapse>
-            )}
-          </TransitionGroup>
-          <TransitionGroup>
-            {opendownDestination && (
-              <Collapse in={opendownDestination} timeout={800}>
-                <div className="addDiv_Style">
-                  <div
-                    className="Add_Submit_button_style"
-                    onClick={handleDestinationPickup}
-                  >
-                    Add & Submit
+                    {fields.slice(1).map((field, index) => (
+                      <TextField
+                        label={field.label}
+                        variant="outlined"
+                        size="small"
+                        name={field?.name}
+                        className="inputField_style"
+                        error={destinationFieldValidation[field?.name]}
+                        onChange={destinationHandleChange}
+                        sx={textFieldStyles}
+                      />
+                    ))}
                   </div>
-                </div>
-              </Collapse>
-            )}
-          </TransitionGroup>
-        </Grid>
+                </Collapse>
+              )}
+            </TransitionGroup>
+            <TransitionGroup>
+              {opendownDestination && (
+                <Collapse in={opendownDestination} timeout={800}>
+                  <div className="addDiv_Style">
+                    <div
+                      className="Add_Submit_button_style"
+                      onClick={handleDestinationPickup}
+                    >
+                      Add & Submit
+                    </div>
+                  </div>
+                </Collapse>
+              )}
+            </TransitionGroup>
+          </>
+        )}
       </Grid>
+    );
+  };
+  return (
+    <Card className="card-style">
+      {" "}
       {props?.isMobile && (
-        <div className="click-page">
-          {props?.steps !== 1 && (
-            <div
-              className="back-click-on-page"
-              onClick={() => props?.steps > 1 && props?.handleBackStep()}
-            >
-              Back
-            </div>
-          )}
-          {props?.steps !== 3 && (
-            <div
-              className="next-click-on-page"
-              onClick={() => props?.steps < 3 && props?.handleNextStep()}
-            >
-              Next
-            </div>
+        <div className="top-stepper-style">{props?.steps}/3</div>
+      )}
+      {props?.isMobile ? (
+        <div>
+          {mobileLocalStorageValue ? (
+            <>
+              <div className="Heading-style">Pickup and Delivery Address</div>
+              <Grid container spacing={{ lg: 8, md: 4, xs: 2 }}>
+                <Grid
+                  item
+                  className="pickup-address-style flex-style-column"
+                  xs={12}
+                  md={6}
+                  lg={6}
+                >
+                  {detailedPickupAddressBox()}
+                </Grid>
+                <Grid
+                  item
+                  className="pickup-address-style flex-style-column"
+                  xs={12}
+                  md={6}
+                  lg={6}
+                >
+                  {detailedDestinationAddressBox()}
+                </Grid>
+              </Grid>
+              <div className="click-page">
+                {props?.steps !== 1 && (
+                  <div
+                    className="back-click-on-page"
+                    onClick={() => props?.steps > 1 && props?.handleBackStep()}
+                  >
+                    Back
+                  </div>
+                )}
+                {props?.steps !== 3 && (
+                  <div
+                    className="next-click-on-page"
+                    onClick={() => props?.steps < 3 && props?.handleNextStep()}
+                  >
+                    Next
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {mobilePickupBox ? (
+                <>
+                  <div className="Heading-style">Pickup Address</div>
+
+                  {pickupAddressbox()}
+                </>
+              ) : (
+                <>
+                  {" "}
+                  <div className="Heading-style">Delivery Address</div>
+                  {destinationAddressBox()}
+                </>
+              )}
+            </>
           )}
         </div>
+      ) : (
+        <>
+          <div className="Heading-style">Pickup and Delivery Address</div>
+          <Grid container spacing={{ lg: 8, md: 4, xs: 2 }}>
+            {showPickupDetailedAddress ? (
+              <Grid
+                item
+                className="pickup-address-style flex-style-column"
+                xs={12}
+                md={6}
+                lg={6}
+              >
+                <Collapse in={showPickupDetailedAddress} timeout={800}>
+                  {detailedPickupAddressBox()}
+                </Collapse>
+              </Grid>
+            ) : (
+              <>{pickupAddressbox()}</>
+            )}
+            {showDestinationDetailedAddress ? (
+              <Grid
+                item
+                className="pickup-address-style flex-style-column"
+                xs={12}
+                md={6}
+                lg={6}
+              >
+                <Collapse in={showDestinationDetailedAddress} timeout={800}>
+                  {detailedDestinationAddressBox()}
+                </Collapse>
+              </Grid>
+            ) : (
+              <>{destinationAddressBox()}</>
+            )}
+          </Grid>
+        </>
       )}
     </Card>
   );

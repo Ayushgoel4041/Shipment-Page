@@ -12,6 +12,7 @@ const CreateShipment = (props) => {
     invoiceData: false,
     pickupFieldAddress: false,
   });
+
   const width = useCurrentWidth();
   useEffect(() => {
     console.log(fieldValidation, "this is the field validation in the system");
@@ -53,6 +54,7 @@ const CreateShipment = (props) => {
               handleBackStep={handleBackStep}
               fieldValidation={fieldValidation}
               setFieldValidation={setFieldValidation}
+              
             />
           )}
           {steps === 3 && (
@@ -64,7 +66,7 @@ const CreateShipment = (props) => {
               handleBackStep={handleBackStep}
               fieldValidation={fieldValidation}
               setFieldValidation={setFieldValidation}
-              {...props}
+              {...props} 
             />
           )}
         </>

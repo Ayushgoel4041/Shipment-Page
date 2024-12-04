@@ -22,7 +22,7 @@ export const getLocationFromPincode = createAsyncThunk(
         params,
         {
           Authorization: token ? `Bearer ${token}` : "", // Add token to Authorization header
-          // Referer: "http://localhost:8000/",
+
         }
       );
       return response;

@@ -9,7 +9,7 @@ const Steps = ({ next, setNext }) => {
       <div
         onClick={() => handleClickSteps(step)}
         className="step-item"
-        style={{ cursor: next >= step ? "pointer" : "not-allowed" }}
+        style={{ cursor: next >= step && next !== 4 ? "pointer" : "not-allowed" }}
       >
         <div>
           <img
@@ -25,7 +25,7 @@ const Steps = ({ next, setNext }) => {
   };
 
   const handleClickSteps = (step) => {
-    if (step < next) {
+    if (step < next && next !== 4) {
       setNext(step);
     }
   };

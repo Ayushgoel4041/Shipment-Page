@@ -25,7 +25,7 @@ const VerifyFunctionality = (props) => {
         <Drawer
           open={props?.openVerifyContact}
           anchor="right"
-          onClose={!props?.verifyContact && props?.handleCloseForm}
+          onClose={!props?.verifyContact && handleClose()}
           style={{ zIndex: "12222" }}
           PaperProps={{
             className: "drawerWidth",
@@ -50,8 +50,8 @@ const VerifyFunctionality = (props) => {
         <Dialog
           open={props?.openVerifyContact}
           onClose={() => {
-            // !props?.verifyContact && handleClose();
-            handleClose();
+            !props?.verifyContact && handleClose();
+            // handleClose();
           }}
           classes={{
             paper: "dialogWidth",

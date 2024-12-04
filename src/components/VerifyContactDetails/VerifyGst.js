@@ -7,9 +7,16 @@ import OtpSkeleton from "./OtpSkeleton";
 import { CiEdit } from "react-icons/ci";
 import OTPInput from "react-otp-input";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
-import { CloudUpload } from "@mui/icons-material";
+import { CloudUpload, WatchLater } from "@mui/icons-material";
+import { useDispatch } from "react-redux";
+import {
+  gstRequestOtp,
+  gstValidateOtp,
+  kycUpload,
+} from "../../Features/gstSlice";
 
 const VerifyGst = (props) => {
+  const dispatch = useDispatch();
   const width = useCurrentWidth();
   const [isMobile, setIsMobile] = useState(false);
   const [openUploadDocument, setOpenUploadDocument] = useState(false);
@@ -17,6 +24,12 @@ const VerifyGst = (props) => {
   const [isError, setIsError] = useState(false);
   const [fileName, setFileName] = useState([]);
   const [fileUploaded, setFileUploaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [verifyOtp, setVerifyOtp] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [counter, setCounter] = useState(60 * 30);
+
+  setInterval(() => setCounter(counter - 1), 1000);
   useEffect(() => {
     if (width < 890) {
       setIsMobile(true);
@@ -31,28 +44,88 @@ const VerifyGst = (props) => {
     setIsGstNumber(value);
   };
   const handleManuallUploadClick = () => {
-    if (isGstNumber?.length > 0) {
-      setOpenUploadDocument(true);
-    } else {
-      setIsError(true);
-      console.log("this is displayed");
-    }
+    setOpenUploadDocument(true);
   };
-  const handleEdit = () => {
-    setOpenUploadDocument(false);
-  };
+
   const handleBoxClick = () => {
     document.getElementById("file-input").click();
   };
-  console.log(fileName, "this is the uploaded files");
+  // console.log(fileName, "this is the uploaded files");
 
   const handleUploadFile = (event) => {
     const selectedFiles = event.target.files;
     const fileArray = Array.from(selectedFiles).map((file) => file.name);
-    setFileName(fileArray);
+    setFileName((prev) => [...prev, ...fileArray]);
   };
   const handleUploadButton = () => {
     setFileUploaded(true);
+  };
+  const handleManualGstVerify = async () => {
+    const clientDetails = JSON.parse(localStorage.getItem("clientData")) || {};
+    const currentDate = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  
+    const upload_files = fileName.map((file) => `media/clients/gst/${clientDetails?.client_id}/${currentDate}/${file}`);
+  
+    const data = {
+      company_id: clientDetails?.company_id,
+      supporting_docs: upload_files,
+    };
+
+    try {
+      const gstUploadApi = await dispatch(kycUpload(data)).unwrap();
+      console.log(gstUploadApi, "this is the response of gstupload api");
+      props?.setIsRecharge(true);
+      props?.setNext((current) => current + 1);
+    } catch (error) {
+      console.log(error, "this is the error");
+    }
+    finally{
+      handleClose()
+    }
+  };
+  const handleOtpRequest = async () => {
+    if (isGstNumber.length > 0) {
+      const data = {
+        gst_number: isGstNumber,
+      };
+      setLoading(false); //true ayegi yhn
+      setVerifyOtp(true);
+
+      try {
+        const requestOtp = await dispatch(gstRequestOtp(data)).unwrap();
+        console.log(requestOtp, "this is the response of request otp ");
+      } catch (error) {
+        console.log(error, "this is the error od request otp ");
+        setVerifyOtp(false);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setIsError(true);
+    }
+  };
+  const handleCloseOtpComponent = () => {
+    setVerifyOtp(false);
+    setIsGstNumber("");
+  };
+  const handleOtpValidate = async (otp) => {
+    setOtp(otp);
+    if (otp.length === 6) {
+      const userData = {
+        otp: otp,
+      };
+
+      try {
+        const validData = await dispatch(gstValidateOtp(userData)).unwrap();
+        console.log(validData, "this is the respinse of valid data");
+        props?.setIsRecharge(true);
+        props?.setNext((current) => current + 1);
+        handleClose();
+      } catch (error) {
+        console.log("this is validatied otp", error);
+        props?.setNext(2);
+      }
+    }
   };
   return (
     <div>
@@ -73,27 +146,18 @@ const VerifyGst = (props) => {
         />
       </div>
       <Box>
-        {openUploadDocument ? (
-          <div>
-            <span className="businessName-style">GST Number: </span>
-            <span>{isGstNumber}</span>
-            <CiEdit onClick={handleEdit} style={{ cursor: "pointer" }} />
-          </div>
-        ) : (
-          <div className="form-title">Verify GST Number</div>
-        )}
+        {!verifyOtp && <div className="form-title">Verify GST Number</div>}
 
-        {false ? (
+        {verifyOtp ? (
           <>
-            {/* {disableButton && (
             <div className="">
               {loading ? (
                 <OtpSkeleton />
               ) : (
                 <>
-                  <div className="enter-otp-style">
-                    Enter OTP sent on{" "}
-                    <span className="color-define">{phoneNumber}</span>{" "}
+                  <div className="enter-otp-style ">
+                    GST Number:
+                    <span className="color-define"> {isGstNumber}</span>
                     <span>
                       <CiEdit
                         color="blue"
@@ -137,35 +201,65 @@ const VerifyGst = (props) => {
                 </>
               )}
             </div>
-          )} */}
           </>
         ) : (
           <>
-            {!openUploadDocument && (
-              <div style={{ margin: "20px 0px" }}>
-                <TextField
-                  label="Enter Gst Number"
-                  variant="outlined"
-                  fullWidth
-                  size="medium"
-                  onChange={handleGstField}
-                  error={isError}
-                  sx={{
-                    "& label.Mui-focused": { color: "#745be7" },
-                    "& .MuiOutlinedInput-root": {
-                      "& fieldset": { borderColor: "#745be7" },
-                      "&:hover fieldset": { borderColor: "#745be7" },
-                      "&.Mui-focused fieldset": { borderColor: "#745be7" },
-                    },
-                  }}
-                />
-              </div>
-            )}
+            {/* {!openUploadDocument && ( */}
+            <div style={{ margin: "20px 0px" }}>
+              <TextField
+                label="Enter Gst Number"
+                variant="outlined"
+                fullWidth
+                size="medium"
+                onChange={handleGstField}
+                error={isError}
+                sx={{
+                  "& label.Mui-focused": { color: "#745be7" },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#745be7" },
+                    "&:hover fieldset": { borderColor: "#745be7" },
+                    "&.Mui-focused fieldset": { borderColor: "#745be7" },
+                  },
+                }}
+              />
+            </div>
+            <Box
+              textAlign="center"
+              my={1}
+              style={{ display: "flex", justifycontent: "center" }}
+            >
+              <hr
+                style={{
+                  border: "none",
+                  borderTop: "1px solid #888",
+                  width: "40%",
+                  display: "inline-block",
+                }}
+              />
+              <span
+                style={{
+                  margin: "0 10px",
+                  color: "#888",
+                  fontSize: "14px",
+                }}
+              >
+                OR
+              </span>
+              <hr
+                style={{
+                  border: "none",
+                  borderTop: "1px solid #888",
+                  width: "40%",
+                  display: "inline-block",
+                }}
+              />
+            </Box>
+            {/* )} */}
 
             {/* <div className="error-handling-style">{error}</div> */}
             {fileUploaded ? (
               <div>
-                <span className="businessName-style">Document Uploaded:   </span>
+                <span className="businessName-style">Document Uploaded: </span>
                 <span>{fileName}</span>
               </div>
             ) : (
@@ -185,6 +279,7 @@ const VerifyGst = (props) => {
                           id="file-input"
                           style={{ display: "none" }}
                           onChange={handleUploadFile}
+                          multiple
                         />
                       </div>
                       {fileName?.length > 0 ? (
@@ -192,7 +287,13 @@ const VerifyGst = (props) => {
                           <div className="uploaded-file-text-style">
                             <span>Uploaded File:</span>{" "}
                             <span style={{ color: "#745be7" }}>
-                              {fileName.join(" , ")}
+                              <ul>
+                                {fileName.map((name, index) => (
+                                  <li key={index} style={{ color: "#745be7" }}>
+                                    {name}
+                                  </li>
+                                ))}
+                              </ul>
                             </span>
                           </div>
                         </div>
@@ -222,9 +323,14 @@ const VerifyGst = (props) => {
                 )}
               </>
             )}
-            {fileUploaded && (
-              <div className="continue-button font-style">Continue</div>
-            )}
+            <div
+              className="continue-button font-style"
+              onClick={() => {
+                fileUploaded ? handleManualGstVerify() : handleOtpRequest();
+              }}
+            >
+              Continue
+            </div>
           </>
         )}
         <div></div>

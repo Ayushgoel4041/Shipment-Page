@@ -4,6 +4,18 @@ body {
   box-sizing: border-box;
   background-color: rgb(238, 238, 238);
 }
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+  width: 100vw;  
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  background-color: rgba(255, 255, 255, 0.8); 
+}
 .logo-charge-style {
   width: 46px;
   height: 46px;
@@ -490,6 +502,9 @@ body {
 .font-bold {
   font-size: 16px;
   font-weight: 600;
+}
+.customTableColor-style{
+  background-color: #F3F3FF !important;
 }
 .bottom-courier-box {
   display: flex;

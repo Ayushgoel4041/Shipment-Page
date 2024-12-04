@@ -7,11 +7,12 @@ import {
   Typography,
   FormControlLabel,
   Checkbox,
+  Box,
 } from "@mui/material";
 import SwitchComponent from "../SwitchComponent";
 import { useDispatch } from "react-redux";
 import { shipmentCharge } from "../../Features/shipmentApi";
-
+import CircularProgress from "@mui/material/CircularProgress";
 const ValueAddedService = (props) => {
   const dispatch = useDispatch();
   const [isMobile, setIsMobile] = useState(false);
@@ -20,6 +21,7 @@ const ValueAddedService = (props) => {
     appointmentDelivery: false,
     poNumber: false,
   });
+  const [loading, setLoading] = useState(false);
 
   const [formValues, setFormValues] = useState({
     amount: "",
@@ -57,6 +59,7 @@ const ValueAddedService = (props) => {
   };
 
   const handleNext = async () => {
+    setLoading(true);
     const valueAddedData = {
       is_insured: valueAddedService?.secureShipment,
       is_appointment_taken: valueAddedService?.appointmentDelivery,
@@ -97,234 +100,248 @@ const ValueAddedService = (props) => {
     };
 
     try {
-      const chargesResponse = await dispatch(shipmentCharge(data)).unwrap();
-      props?.setNext((current) => current + 1);
+      await dispatch(shipmentCharge(data)).unwrap();
+      props?.setNext(2);
     } catch (error) {
       console.log(error, "This is the error of shipment charges");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div>
-      <Card
-        className={
-          props?.fieldValidation?.packageData &&
-          props?.fieldValidation?.invoiceData
-            ? "card-style"
-            : "card-style-disable"
-        }
-      >
-        {props?.isMobile && (
-          <div className="top-stepper-style">{props?.steps}/3</div>
-        )}
-        <div
-          className={
-            props?.fieldValidation?.packageData &&
-            props?.fieldValidation?.invoiceData
-              ? "Heading-style"
-              : "Heading-style font-disable-color"
-          }
+      {loading ? (
+        <Box
+         className='loading-container'
         >
-          Value Added Services
-        </div>
-        <Grid container spacing={2} className="grid-container-box">
-          <Grid
-            item
-            className="flex-style-value"
-            lg={5.5}
-            md={5.5}
-            sm={12}
-            xs={12}
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <Card
+            className={
+              props?.fieldValidation?.packageData &&
+              props?.fieldValidation?.invoiceData
+                ? "card-style"
+                : "card-style-disable"
+            }
           >
-            <div className="switchComponent-style">
-              <div
-                className={
-                  props?.fieldValidation?.packageData &&
-                  props?.fieldValidation?.invoiceData
-                    ? "value-added-text"
-                    : "value-added-text font-disable-color"
-                }
-              >
-                Secure Shipment:
-              </div>
-              <SwitchComponent
-                type="IOSSwitch"
-                onChange={() => handleToggle("secureShipment")}
-                disable={
-                  props?.fieldValidation?.packageData &&
-                  props?.fieldValidation?.invoiceData
-                }
-              />
+            {props?.isMobile && (
+              <div className="top-stepper-style">{props?.steps}/3</div>
+            )}
+            <div
+              className={
+                props?.fieldValidation?.packageData &&
+                props?.fieldValidation?.invoiceData
+                  ? "Heading-style"
+                  : "Heading-style font-disable-color"
+              }
+            >
+              Value Added Services
             </div>
-            <div className="switchComponent-style">
-              <div
-                className={
-                  props?.fieldValidation?.packageData &&
-                  props?.fieldValidation?.invoiceData
-                    ? "value-added-text"
-                    : "value-added-text font-disable-color"
-                }
+            <Grid container spacing={2} className="grid-container-box">
+              <Grid
+                item
+                className="flex-style-value"
+                lg={5.5}
+                md={5.5}
+                sm={12}
+                xs={12}
               >
-                Appointment Delivery:
+                <div className="switchComponent-style">
+                  <div
+                    className={
+                      props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                        ? "value-added-text"
+                        : "value-added-text font-disable-color"
+                    }
+                  >
+                    Secure Shipment:
+                  </div>
+                  <SwitchComponent
+                    type="IOSSwitch"
+                    onChange={() => handleToggle("secureShipment")}
+                    disable={
+                      props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                    }
+                  />
+                </div>
+                <div className="switchComponent-style">
+                  <div
+                    className={
+                      props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                        ? "value-added-text"
+                        : "value-added-text font-disable-color"
+                    }
+                  >
+                    Appointment Delivery:
+                  </div>
+                  <SwitchComponent
+                    type="IOSSwitch"
+                    onChange={() => handleToggle("appointmentDelivery")}
+                    disable={
+                      props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                    }
+                  />
+                </div>
+                <div className="switchComponent-style">
+                  <div
+                    className={
+                      props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                        ? "value-added-text"
+                        : "value-added-text font-disable-color"
+                    }
+                  >
+                    PO Number:
+                  </div>
+                  <SwitchComponent
+                    type="IOSSwitch"
+                    onChange={() => handleToggle("poNumber")}
+                    disable={
+                      props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                    }
+                  />
+                </div>
+              </Grid>
+
+              <Grid
+                item
+                lg={1}
+                md={1}
+                sm={12}
+                xs={12}
+                style={{
+                  display: isMobile ? "block" : "flex",
+                  margin: isMobile && "10px 0px 30px",
+                }}
+              >
+                <Divider orientation={isMobile ? "horizontal" : "vertical"} />
+              </Grid>
+
+              <Grid
+                item
+                className="flex-style-value"
+                lg={5.5}
+                md={5.5}
+                sm={12}
+                xs={12}
+              >
+                {valueAddedService.secureShipment && (
+                  <div className="switchComponent-style">
+                    <div className="value-added-text-input">Enter Amount:</div>
+                    <TextField
+                      label="Enter Amount"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      sx={textFieldStyles}
+                      name="amount"
+                      value={formValues.amount}
+                      error={
+                        valueAddedService.secureShipment && !formValues.amount
+                      }
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                )}
+
+                {valueAddedService.appointmentDelivery && (
+                  <div className="switchComponent-style">
+                    <div className="value-added-text-input">Select Date:</div>
+                    <TextField
+                      variant="outlined"
+                      type="date"
+                      fullWidth
+                      size="small"
+                      sx={textFieldStyles}
+                      name="appointmentDate"
+                      value={formValues.appointmentDate}
+                      error={
+                        valueAddedService.appointmentDelivery &&
+                        !formValues.appointmentDate
+                      }
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                )}
+
+                {valueAddedService.poNumber && (
+                  <div className="switchComponent-style">
+                    <div className="value-added-text-input">Enter PO:</div>
+                    <TextField
+                      label="Enter PO"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      sx={textFieldStyles}
+                      name="poNumber"
+                      error={valueAddedService.poNumber && !formValues.poNumber}
+                      value={formValues.poNumber}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                )}
+              </Grid>
+            </Grid>
+
+            {props?.isMobile && (
+              <div className="click-on-page">
+                {props?.steps !== 1 && (
+                  <div
+                    className="back-click-on-page"
+                    onClick={() => props?.steps > 1 && props?.handleBackStep()}
+                  >
+                    Back
+                  </div>
+                )}
+                {props?.steps !== 3 && (
+                  <div
+                    className="next-click-on-page"
+                    onClick={() => props?.steps < 3 && props?.handleNextStep()}
+                  >
+                    Next
+                  </div>
+                )}
               </div>
-              <SwitchComponent
-                type="IOSSwitch"
-                onChange={() => handleToggle("appointmentDelivery")}
-                disable={
-                  props?.fieldValidation?.packageData &&
-                  props?.fieldValidation?.invoiceData
-                }
-              />
+            )}
+          </Card>
+          <div className="text-center">
+            <FormControlLabel
+              control={<Checkbox defaultChecked />}
+              className="privacy-policy-style"
+              label="By procedding you agree to SR Cargo's Terms Of Service and Privacy Policy."
+              sx={{
+                "& .MuiFormControlLabel-label": {
+                  textAlign: "left",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "black",
+                },
+              }}
+            />
+            <div className="save-select-courier-div">
+              {props?.fieldValidation?.packageData &&
+              props?.fieldValidation?.invoiceData &&
+              props?.fieldValidation?.pickupFieldAddress ? (
+                <div onClick={handleNext} className="save-select-button">
+                  Save and Select Courier
+                </div>
+              ) : (
+                <div className="save-select-button save-select-button-disable">
+                  Save and Select Courier
+                </div>
+              )}
             </div>
-            <div className="switchComponent-style">
-              <div
-                className={
-                  props?.fieldValidation?.packageData &&
-                  props?.fieldValidation?.invoiceData
-                    ? "value-added-text"
-                    : "value-added-text font-disable-color"
-                }
-              >
-                PO Number:
-              </div>
-              <SwitchComponent
-                type="IOSSwitch"
-                onChange={() => handleToggle("poNumber")}
-                disable={
-                  props?.fieldValidation?.packageData &&
-                  props?.fieldValidation?.invoiceData
-                }
-              />
-            </div>
-          </Grid>
-
-          <Grid
-            item
-            lg={1}
-            md={1}
-            sm={12}
-            xs={12}
-            style={{
-              display: isMobile ? "block" : "flex",
-              margin: isMobile && "10px 0px 30px",
-            }}
-          >
-            <Divider orientation={isMobile ? "horizontal" : "vertical"} />
-          </Grid>
-
-          <Grid
-            item
-            className="flex-style-value"
-            lg={5.5}
-            md={5.5}
-            sm={12}
-            xs={12}
-          >
-            {valueAddedService.secureShipment && (
-              <div className="switchComponent-style">
-                <div className="value-added-text-input">Enter Amount:</div>
-                <TextField
-                  label="Enter Amount"
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                  sx={textFieldStyles}
-                  name="amount"
-                  value={formValues.amount}
-                  error={valueAddedService.secureShipment && !formValues.amount}
-                  onChange={handleInputChange}
-                />
-              </div>
-            )}
-
-            {valueAddedService.appointmentDelivery && (
-              <div className="switchComponent-style">
-                <div className="value-added-text-input">Select Date:</div>
-                <TextField
-                  variant="outlined"
-                  type="date"
-                  fullWidth
-                  size="small"
-                  sx={textFieldStyles}
-                  name="appointmentDate"
-                  value={formValues.appointmentDate}
-                  error={
-                    valueAddedService.appointmentDelivery &&
-                    !formValues.appointmentDate
-                  }
-                  onChange={handleInputChange}
-                />
-              </div>
-            )}
-
-            {valueAddedService.poNumber && (
-              <div className="switchComponent-style">
-                <div className="value-added-text-input">Enter PO:</div>
-                <TextField
-                  label="Enter PO"
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                  sx={textFieldStyles}
-                  name="poNumber"
-                  error={valueAddedService.poNumber && !formValues.poNumber}
-                  value={formValues.poNumber}
-                  onChange={handleInputChange}
-                />
-              </div>
-            )}
-          </Grid>
-        </Grid>
-
-        {props?.isMobile && (
-          <div className="click-on-page">
-            {props?.steps !== 1 && (
-              <div
-                className="back-click-on-page"
-                onClick={() => props?.steps > 1 && props?.handleBackStep()}
-              >
-                Back
-              </div>
-            )}
-            {props?.steps !== 3 && (
-              <div
-                className="next-click-on-page"
-                onClick={() => props?.steps < 3 && props?.handleNextStep()}
-              >
-                Next
-              </div>
-            )}
           </div>
-        )}
-      </Card>
-      <div className="text-center">
-        <FormControlLabel
-          control={<Checkbox defaultChecked />}
-          className="privacy-policy-style"
-          label="By procedding you agree to SR Cargo's Terms Of Service and Privacy Policy."
-          sx={{
-            "& .MuiFormControlLabel-label": {
-              textAlign: "left",
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "black",
-            },
-          }}
-        />
-        <div className="save-select-courier-div">
-          {props?.fieldValidation?.packageData &&
-          props?.fieldValidation?.invoiceData &&
-          props?.fieldValidation?.pickupFieldAddress ? (
-            <div onClick={handleNext} className="save-select-button">
-              Save and Select Courier
-            </div>
-          ) : (
-            <div className="save-select-button save-select-button-disable">
-              Save and Select Courier
-            </div>
-          )}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };

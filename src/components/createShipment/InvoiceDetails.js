@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Grid, TextField, Typography } from "@mui/material";
+import { Card, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import SwitchComponent from "../SwitchComponent";
 import Assets from "../../assets/Assets";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
@@ -87,17 +87,18 @@ const InvoiceDetails = (props) => {
     const isPackageValid = packageDataList.every((item) =>
       field.every(({ name }) => item[name]?.trim())
     );
-  
+
     const isInvoiceValid =
-      invoiceAmount?.invoiceNumber?.trim() && invoiceAmount?.invoiceAmount?.trim();
-  
+      invoiceAmount?.invoiceNumber?.trim() &&
+      invoiceAmount?.invoiceAmount?.trim();
+
     props?.setFieldValidation((prevData) => ({
       ...prevData,
       packageData: isPackageValid,
       invoiceData: isInvoiceValid,
     }));
-  }, [packageDataList, invoiceAmount]); 
-  
+  }, [packageDataList, invoiceAmount]);
+
   return (
     <>
       <Card
@@ -123,8 +124,12 @@ const InvoiceDetails = (props) => {
           <div className="justify-center-style">
             {!props?.isMobile && (
               // <div className="box-image-style">
-                <div>
-                <img src={Assets.boxImage} alt="box image" style={{width:'300px' , height:"300px"}}/>
+              <div>
+                <img
+                  src={Assets.boxImage}
+                  alt="box image"
+                  style={{ width: "300px", height: "300px" }}
+                />
               </div>
             )}
           </div>
@@ -134,30 +139,62 @@ const InvoiceDetails = (props) => {
               <div key={index} className="display-flex-row">
                 <div className="measure-data-style">
                   <div className="data1-style">
-                    {field?.slice(0, 2)?.map((dataField, fieldIndex) => (
-                      <TextField
-                        key={fieldIndex}
-                        label={dataField.label}
-                        variant="outlined"
-                        size="small"
-                        name={dataField.name}
-                        value={data[dataField.name]}
-                        className="full-width-style"
-                        error={props?.fieldValidation[dataField?.name]}
-                        disabled={!props?.fieldValidation?.pickupFieldAddress}
-                        onChange={(e) => handleInputChange(index, e)}
-                        sx={{
-                          "& label.Mui-focused": { color: "#745be7" },
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": { borderColor: "#0000001F" },
-                            "&:hover fieldset": { borderColor: "#745be7" },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#745be7",
+                    {field?.slice(0, 2)?.map((dataField, fieldIndex) =>
+                      dataField.name === "dimension" ? ( 
+                        <TextField
+                          key={fieldIndex}
+                          select
+                          label={dataField.label}
+                          variant="outlined"
+                          size="small"
+                          name={dataField.name}
+                          value={data[dataField.name] || ""} // Default to empty value initially
+                          className="full-width-style"
+                          error={props?.fieldValidation[dataField?.name]}
+                          disabled={!props?.fieldValidation?.pickupFieldAddress}
+                          onChange={(e) => handleInputChange(index, e)}
+                          sx={{
+                            "& label.Mui-focused": { color: "#745be7" },
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": { borderColor: "#0000001F" },
+                              "&:hover fieldset": { borderColor: "#745be7" },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#745be7",
+                              },
                             },
-                          },
-                        }}
-                      />
-                    ))}
+                          }}
+                        >
+                          <MenuItem value="" disabled>
+                            Select Unit
+                          </MenuItem>
+                          <MenuItem value="cm">Centimeters (cm)</MenuItem>
+                          <MenuItem value="inch">Inches (inch)</MenuItem>
+                        </TextField>
+                      ) : (
+                        <TextField
+                          key={fieldIndex}
+                          label={dataField.label}
+                          variant="outlined"
+                          size="small"
+                          name={dataField.name}
+                          value={data[dataField.name]}
+                          className="full-width-style"
+                          error={props?.fieldValidation[dataField?.name]}
+                          disabled={!props?.fieldValidation?.pickupFieldAddress}
+                          onChange={(e) => handleInputChange(index, e)}
+                          sx={{
+                            "& label.Mui-focused": { color: "#745be7" },
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": { borderColor: "#0000001F" },
+                              "&:hover fieldset": { borderColor: "#745be7" },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#745be7",
+                              },
+                            },
+                          }}
+                        />
+                      )
+                    )}
                   </div>
                   <div className="data2-style">
                     {field?.slice(2)?.map((dataField, fieldIndex) => (

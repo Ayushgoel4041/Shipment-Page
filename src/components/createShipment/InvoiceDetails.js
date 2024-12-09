@@ -22,17 +22,24 @@ const InvoiceDetails = (props) => {
         ];
   });
 
-  const [invoiceAmount, setInvoiceAmount] = useState(() => {
-    const storedData = JSON.parse(localStorage.getItem("InvoiceDetails"));
-    return storedData?.length
-      ? storedData
-      : [
-          {
-            invoiceNumber: "",
-            invoiceAmount: "",
-          },
-        ];
-  });
+  const [invoiceAmount, setInvoiceAmount] = useState({});
+  useEffect(() => {
+    const storedInvoiceData =
+      JSON.parse(localStorage.getItem("InvoiceDetails")) || {};
+    if (Object?.keys(storedInvoiceData)?.length > 0) {
+      setInvoiceAmount(storedInvoiceData);
+    }
+  }, []);
+  useEffect(() => {
+    const totalBoxes = packageDataList.reduce((total, packageDataList) => {
+      const boxes = parseInt(packageDataList.no_of_boxes, 10) || 0;
+      return total + boxes;
+    }, 0);
+    setInvoiceAmount((prevData) => ({
+      ...prevData,
+      totalQuantity: totalBoxes,
+    }));
+  }, [packageDataList]);
 
   const field = [
     { name: "no_of_boxes", label: "No. of boxes" },
@@ -46,6 +53,7 @@ const InvoiceDetails = (props) => {
   useEffect(() => {
     localStorage.setItem("PackageDetails", JSON.stringify(packageDataList));
     localStorage.setItem("InvoiceDetails", JSON.stringify(invoiceAmount));
+
   }, [packageDataList, invoiceAmount]);
 
   const handleAddField = () => {
@@ -140,36 +148,37 @@ const InvoiceDetails = (props) => {
                 <div className="measure-data-style">
                   <div className="data1-style">
                     {field?.slice(0, 2)?.map((dataField, fieldIndex) =>
-                      dataField.name === "dimension" ? ( 
+                      dataField.name === "dimension" ? (
                         <TextField
-                          key={fieldIndex}
-                          select
-                          label={dataField.label}
-                          variant="outlined"
-                          size="small"
-                          name={dataField.name}
-                          value={data[dataField.name] || ""} // Default to empty value initially
-                          className="full-width-style"
-                          error={props?.fieldValidation[dataField?.name]}
-                          disabled={!props?.fieldValidation?.pickupFieldAddress}
-                          onChange={(e) => handleInputChange(index, e)}
-                          sx={{
-                            "& label.Mui-focused": { color: "#745be7" },
-                            "& .MuiOutlinedInput-root": {
-                              "& fieldset": { borderColor: "#0000001F" },
-                              "&:hover fieldset": { borderColor: "#745be7" },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#745be7",
-                              },
+                        key={fieldIndex}
+                        select
+                        label={dataField.label}
+                        variant="outlined"
+                        size="small"
+                        name={dataField.name}
+                        value={data[dataField.name] || ""}
+                        className="full-width-style"
+                        error={props?.fieldValidation[dataField?.name]}
+                        disabled={!props?.fieldValidation?.pickupFieldAddress}
+                        onChange={(e) => handleInputChange(index, e)}
+                        sx={{
+                          "& label.Mui-focused": { color: "#745be7" },
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": { borderColor: "#0000001F" },
+                            "&:hover fieldset": { borderColor: "#745be7" },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#745be7",
                             },
-                          }}
-                        >
-                          <MenuItem value="" disabled>
-                            Select Unit
-                          </MenuItem>
-                          <MenuItem value="cm">Centimeters (cm)</MenuItem>
-                          <MenuItem value="inch">Inches (inch)</MenuItem>
-                        </TextField>
+                          },
+                        }}
+                      >
+                        <MenuItem value="" disabled>
+                          Select Unit
+                        </MenuItem>
+                        <MenuItem value="cm">Centimeters (cm)</MenuItem>
+                        <MenuItem value="inch">Inches (inch)</MenuItem>
+                      </TextField>
+                      
                       ) : (
                         <TextField
                           key={fieldIndex}
@@ -253,7 +262,7 @@ const InvoiceDetails = (props) => {
                     : "box-content-head-style font-disable-color"
                 }
               >
-                Total Boxes:{" "}
+                Total Boxes:{invoiceAmount?.totalQuantity}
               </Typography>
               <Typography
                 className={
@@ -262,7 +271,7 @@ const InvoiceDetails = (props) => {
                     : "box-content-head-style font-disable-color"
                 }
               >
-                Chargeable Weight:
+                {/* Chargeable Weight: */}
               </Typography>
             </div>
 
@@ -284,7 +293,7 @@ const InvoiceDetails = (props) => {
                   variant="outlined"
                   size="small"
                   name="invoiceNumber"
-                  value={invoiceAmount.invoiceNumber}
+                  value={invoiceAmount.invoiceNumber || ""}
                   onChange={handleInputInvoice}
                   error={props?.fieldValidation?.invoiceNumber}
                   disabled={!props?.fieldValidation?.pickupFieldAddress}
@@ -298,6 +307,7 @@ const InvoiceDetails = (props) => {
                   }}
                 />
               </Grid>
+
               <Grid
                 item
                 className="pickup-address-style flex-style-column"
@@ -311,10 +321,10 @@ const InvoiceDetails = (props) => {
                   variant="outlined"
                   size="small"
                   name="invoiceAmount"
-                  value={invoiceAmount.invoiceAmount}
+                  value={invoiceAmount.invoiceAmount || ""}
+                  onChange={handleInputInvoice}
                   error={props?.fieldValidation?.invoiceAmount}
                   disabled={!props?.fieldValidation?.pickupFieldAddress}
-                  onChange={handleInputInvoice}
                   sx={{
                     "& label.Mui-focused": { color: "#745be7" },
                     "& .MuiOutlinedInput-root": {

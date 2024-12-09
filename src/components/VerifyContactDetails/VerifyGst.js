@@ -9,11 +9,13 @@ import OTPInput from "react-otp-input";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { CloudUpload, WatchLater } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
+
 import {
   gstRequestOtp,
   gstValidateOtp,
   kycUpload,
 } from "../../Features/gstSlice";
+import { showSnackbar } from "../SnackbarComponent";
 
 const VerifyGst = (props) => {
   const dispatch = useDispatch();
@@ -60,43 +62,78 @@ const VerifyGst = (props) => {
   const handleUploadButton = () => {
     setFileUploaded(true);
   };
+
+
   const handleManualGstVerify = async () => {
+    setLoading(true);
     const clientDetails = JSON.parse(localStorage.getItem("clientData")) || {};
-    const currentDate = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-  
-    const upload_files = fileName.map((file) => `media/clients/gst/${clientDetails?.client_id}/${currentDate}/${file}`);
-  
+    const currentDate = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
+
+    const upload_files = fileName.map(
+      (file) =>
+        `media/clients/gst/${clientDetails?.client_id}/${currentDate}/${file}`
+    );
+
     const data = {
       company_id: clientDetails?.company_id,
-      supporting_docs: upload_files,
+      kyc_supporting_docs: upload_files,
+      is_frameless: true,
     };
 
     try {
-      const gstUploadApi = await dispatch(kycUpload(data)).unwrap();
-      console.log(gstUploadApi, "this is the response of gstupload api");
-      props?.setIsRecharge(true);
-      props?.setNext((current) => current + 1);
+      await dispatch(kycUpload(data)).unwrap();
+      // props?.setNext((current) => current + 1);
+      props?.setIsRecharge(!props.isRecharge);
+      showSnackbar({
+        message: "File Upload Successfully",
+        severity: "success",
+        duration: 5000,
+        position: { vertical: "top", horizontal: "right" },
+      });
+
+      handleClose();
     } catch (error) {
       console.log(error, "this is the error");
-    }
-    finally{
-      handleClose()
+      showSnackbar({
+        message: "Something went wrong. Please try again!",
+        severity: "error",
+        duration: 5000,
+        position: { vertical: "top", horizontal: "right" },
+      });
+    } finally {
+      setLoading(false);
     }
   };
   const handleOtpRequest = async () => {
     if (isGstNumber.length > 0) {
       const data = {
         gst_number: isGstNumber,
+        is_frameless: true,
+        token:
+          "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FwaXYyLnNoaXByb2NrZXQuaW4vdjEvYXV0aC9yZWdpc3Rlci9tb2JpbGUvdmFsaWRhdGUtb3RwIiwiaWF0IjoxNzMzMzk1OTgxLCJleHAiOjE3MzQyNTk5ODEsIm5iZiI6MTczMzM5NTk4MSwianRpIjoiUVRGNlNweTNBWWlmeTRrWiIsInN1YiI6MjcxOTM3MywicHJ2IjoiMDViYjY2MGY2N2NhYzc0NWY3YjNkYTFlZWYxOTcxOTVhMjExZTZkOSIsImNpZCI6MjY3NjY1Nn0.bzb9PyNjhTbolmpa0M2QNoYuUgKqKOuNR2yYxaQ5ujs",
       };
-      setLoading(false); //true ayegi yhn
+      setLoading(true);
       setVerifyOtp(true);
 
       try {
         const requestOtp = await dispatch(gstRequestOtp(data)).unwrap();
         console.log(requestOtp, "this is the response of request otp ");
+        showSnackbar({
+          message: requestOtp?.message,
+          severity: "success",
+          duration: 5000,
+          position: { vertical: "top", horizontal: "right" },
+        });
       } catch (error) {
-        console.log(error, "this is the error od request otp ");
         setVerifyOtp(false);
+        console.log(error, "tjos os<<<<<,------");
+
+        showSnackbar({
+          message: "Something Went Wrong. Please Try Again!",
+          severity: "error",
+          duration: 5000,
+          position: { vertical: "top", horizontal: "right" },
+        });
       } finally {
         setLoading(false);
       }
@@ -113,19 +150,37 @@ const VerifyGst = (props) => {
     if (otp.length === 6) {
       const userData = {
         otp: otp,
+        is_frameless: true,
       };
 
       try {
         const validData = await dispatch(gstValidateOtp(userData)).unwrap();
         console.log(validData, "this is the respinse of valid data");
-        props?.setIsRecharge(true);
-        props?.setNext((current) => current + 1);
+        props?.setIsRecharge(!props.isRecharge);
+        // props?.setNext((current) => current + 1);
+        showSnackbar({
+          message: "GST Number Verified Successfully",
+          severity: "success",
+          duration: 5000,
+          position: { vertical: "top", horizontal: "right" },
+        });
         handleClose();
       } catch (error) {
-        console.log("this is validatied otp", error);
         props?.setNext(2);
+        showSnackbar({
+          message: "Something Went Wrong. Please Try Again!",
+          severity: "error",
+          duration: 5000,
+          position: { vertical: "top", horizontal: "right" },
+        });
       }
     }
+  };
+  const truncateText = (text, maxLength) => {
+    if (text.length > maxLength) {
+      return text.substring(0, 10) + "...." + text.slice(-10); // 10 characters at start and end
+    }
+    return text;
   };
   return (
     <div>
@@ -260,7 +315,7 @@ const VerifyGst = (props) => {
             {fileUploaded ? (
               <div>
                 <span className="businessName-style">Document Uploaded: </span>
-                <span>{fileName}</span>
+                <span>{truncateText(fileName, 20)}</span>
               </div>
             ) : (
               <>
@@ -288,11 +343,27 @@ const VerifyGst = (props) => {
                             <span>Uploaded File:</span>{" "}
                             <span style={{ color: "#745be7" }}>
                               <ul>
-                                {fileName.map((name, index) => (
-                                  <li key={index} style={{ color: "#745be7" }}>
-                                    {name}
-                                  </li>
-                                ))}
+                                {fileName?.map((name, index) => {
+                                  const truncate = (text, maxLength) => {
+                                    if (text.length > maxLength) {
+                                      return (
+                                        text.substring(0, 10) +
+                                        "...." +
+                                        text.slice(-10)
+                                      );
+                                    }
+                                    return text;
+                                  };
+
+                                  return (
+                                    <li
+                                      key={index}
+                                      style={{ color: "#745be7" }}
+                                    >
+                                      {truncate(name, 20)}
+                                    </li>
+                                  );
+                                })}
                               </ul>
                             </span>
                           </div>
@@ -329,7 +400,7 @@ const VerifyGst = (props) => {
                 fileUploaded ? handleManualGstVerify() : handleOtpRequest();
               }}
             >
-              Continue
+              {loading ? "hey" : "Continue"}
             </div>
           </>
         )}

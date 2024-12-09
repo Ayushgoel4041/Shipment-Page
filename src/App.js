@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { getFramelessShipment } from "./Features/shipmentApi";
 import { useDispatch, useSelector } from "react-redux";
 import ShipParcel from "./components/shipParcel/ShipParcel";
+import { showSnackbar } from "./components/SnackbarComponent";
 const App = () => {
   const width = CurrentWidth();
   const dispatch = useDispatch();
@@ -44,6 +45,12 @@ const App = () => {
       await dispatch(getFramelessShipment(clientData)).unwrap();
     } catch (error) {
       console.log(error, "this is error if frameless tocket");
+      showSnackbar({
+        message: error,
+        severity: "error",
+        duration: 3000,
+        position: { vertical: "top", horizontal: "right" },
+      });
     }
   };
 
@@ -74,7 +81,7 @@ const App = () => {
   const toggleSidebar = () => {
     setOpenFullSideBar((prev) => !prev);
   };
-  console.log("this is the data after validation", userData);
+  // console.log("this is the data after validation", userData);
 
   return (
     <div style={{ display: "flex" }}>

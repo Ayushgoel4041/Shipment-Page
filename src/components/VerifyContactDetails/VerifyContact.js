@@ -18,6 +18,7 @@ import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import Cookies from "js-cookie";
 import { getFramelessShipment } from "../../Features/shipmentApi";
 import { Cookie } from "@mui/icons-material";
+import { showSnackbar } from "../SnackbarComponent";
 
 const VerifyContact = (props) => {
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ const VerifyContact = (props) => {
   const [isMobile, setIsMobile] = useState(false);
   const [otp, setOtp] = useState("");
   const [counter, setCounter] = useState(60 * 30);
-
+  const [isTextfieldError, setIsTextFieldError] = useState(false);
   setInterval(() => setCounter(counter - 1), 1000);
 
   useEffect(() => {
@@ -46,9 +47,14 @@ const VerifyContact = (props) => {
 
   const handleInputChange = (e) => {
     const value = e.target.value.replace(/[^0-9]/g, ""); // Allow only numbers
-    if (value.length === 10) {
-      setPhoneNumber(value);
-      setDisableButton(true);
+    if (/^[1-5]/.test(value)) {
+      setIsTextFieldError(true);
+    }
+    if (/^[789]/.test(value) || value === "") {
+      if (value.length === 10) {
+        setPhoneNumber(value);
+        setDisableButton(true);
+      }
     } else {
       setDisableButton(false);
     }
@@ -64,6 +70,12 @@ const VerifyContact = (props) => {
       setOpenOtpComponent(true);
     } catch (err) {
       setDisableButton(false);
+      showSnackbar({
+        message: err,
+        severity: "error",
+        duration: 5000,
+        position: { vertical: "top", horizontal: "right" },
+      });
     }
   };
 
@@ -78,18 +90,35 @@ const VerifyContact = (props) => {
       try {
         const validData = await dispatch(validateOtp(userData)).unwrap();
         props?.setUserData(validData);
-        
+
         localStorage.setItem("clientData", JSON.stringify(validData));
         setCookieFunction("BearerToken", validData?.token);
 
+        showSnackbar({
+          message: "Otp Verified successfully",
+          severity: "success",
+          duration: 3000,
+          position: { vertical: "top", horizontal: "right" },
+        });
         try {
           await dispatch(getFramelessShipment(validData)).unwrap();
-        } catch (error) {
-          console.log(error, "this is error if frameless tocket");
+          handleClose();
+        } catch {
+          showSnackbar({
+            message: "Something went wrong.Try again later",
+            severity: "error",
+            duration: 3000,
+            position: { vertical: "top", horizontal: "right" },
+          });
         }
-        handleClose();
+        // handleClose(); 
       } catch (error) {
-        console.log("this is validatied otp", error);
+        showSnackbar({
+          message: error,
+          severity: "error",
+          duration: 5000,
+          position: { vertical: "top", horizontal: "right" },
+        });
       }
     }
   };
@@ -191,7 +220,9 @@ const VerifyContact = (props) => {
               variant="outlined"
               fullWidth
               size="medium"
+              error={isTextfieldError}
               autoFocus
+              onChange={handleInputChange}
               sx={{
                 "& label.Mui-focused": { color: "#745be7" },
                 "& .MuiOutlinedInput-root": {
@@ -201,9 +232,7 @@ const VerifyContact = (props) => {
                 },
               }}
               inputProps={{
-                pattern: "[0-9]*",
                 maxLength: 10,
-                onInput: handleInputChange,
               }}
               InputProps={{
                 startAdornment: (

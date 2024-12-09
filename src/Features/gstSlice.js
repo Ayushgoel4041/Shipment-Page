@@ -5,19 +5,17 @@ import Cookies from "js-cookie";
 export const kycUpload = createAsyncThunk(
   "baseUrl/kycDocUpload",
   async (data, { rejectWithValue }) => {
-    const token = Cookies.get("BearerToken" || "");
-    if (!token) {
-      return rejectWithValue("No token found. Please log in.");
-    }
+    // const token = Cookies.get("BearerToken" || "");
+    // if (!token) {
+    //   return rejectWithValue("No token found. Please log in.");
+    // }
     try {
       const response = await apiService.request(
         "baseUrl",
         "kycDocUpload",
         data,
         null,
-        {
-          Authorization: token ? `Bearer ${token}` : "", // Add token to Authorization header
-        }
+       null,
       );
       return response; // Return the API response
     } catch (error) {
@@ -33,19 +31,17 @@ export const kycUpload = createAsyncThunk(
 export const gstRequestOtp = createAsyncThunk(
   "baseUrl/gstRequestOtp",
   async (data, { rejectWithValue }) => {
-    const token = Cookies.get("BearerToken" || "");
-    if (!token) {
-      return rejectWithValue("No token found. Please log in.");
-    }
+    // const token = Cookies.get("BearerToken" || "");
+    // if (!token) {
+    //   return rejectWithValue("No token found. Please log in.");
+    // }
     try {
       const response = await apiService.request(
         "baseUrl",
         "gstRequestOtp",
         data,
         null,
-        {
-          Authorization: token ? `Bearer ${token}` : "", // Add token to Authorization header
-        }
+        null,
       );
       return response; // Return the API response
     } catch (error) {
@@ -91,8 +87,8 @@ const gstSliceApi = createSlice({
     error: null,
     loading: false,
     kycUploadData: null,
-    gstRequestOtpData:null,
-    gstValidateOtpData:null,
+    gstRequestOtpData: null,
+    gstValidateOtpData: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -113,7 +109,8 @@ const gstSliceApi = createSlice({
       //request otp
       .addCase(gstRequestOtp.fulfilled, (state, action) => {
         state.loading = false;
-        state.gstRequestOtpData = action.payload ?? "Failed to fetch gst Upload";
+        state.gstRequestOtpData =
+          action.payload ?? "Failed to fetch gst Upload";
       })
       .addCase(gstRequestOtp.pending, (state) => {
         state.loading = true;
@@ -127,7 +124,8 @@ const gstSliceApi = createSlice({
       //validate otp
       .addCase(gstValidateOtp.fulfilled, (state, action) => {
         state.loading = false;
-        state.gstValidateOtpData = action.payload ?? "Failed to fetch gst Upload";
+        state.gstValidateOtpData =
+          action.payload ?? "Failed to fetch gst Upload";
       })
       .addCase(gstValidateOtp.pending, (state) => {
         state.loading = true;

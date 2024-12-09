@@ -14,15 +14,16 @@ import EditIcon from "@mui/icons-material/Edit";
 import EditDeliveryDetails from "./EditDeliveryDetails";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocationFromPincode } from "../../Features/CommonApi";
+import { showSnackbar } from "../SnackbarComponent";
 
 const DeliveryDetails = (props) => {
   const dispatch = useDispatch();
   const loading = useSelector((state) => state.otp.loading);
   const error = useSelector((state) => state.otp.error);
-  const [pickupLocationData, setPickupLocationData] = useState({});
-  const [destinationLocationData, setDestinationLocationData] = useState({});
+  const [pickupLocationData, setPickupLocationData] = useState(false);
+  const [destinationLocationData, setDestinationLocationData] = useState(false);
   const fields = [
-    { label: "Landmark", name: "landmark" },
+    { label: "Warehouse Name", name: "warehouseName" },
     { label: "Name", name: "name" },
     { label: "Contact Number", name: "contactNumber" },
     { label: "E-mail", name: "email" },
@@ -49,6 +50,7 @@ const DeliveryDetails = (props) => {
 
   const [mobilePickupBox, setMobilePickupBox] = useState(true);
   const [mobileLocalStorageValue, setMobileLocalStorageValue] = useState(false);
+
   const handleInputPickupPincodeChange = async (e) => {
     const { name, value } = e.target;
     const pinCode = e.target.value.replace(/[^0-9]/g, "");
@@ -61,22 +63,32 @@ const DeliveryDetails = (props) => {
         const locationData = await dispatch(
           getLocationFromPincode(pinCode)
         ).unwrap();
-        setPickupLocationData(locationData);
+        let reqObj = {
+          city: locationData?.location[0],
+          state: locationData?.location[1],
+        };
+        localStorage.setItem("fromAddress", JSON.stringify(reqObj));
+        setPickupLocationData(true);
+
         setPickupPinCodeVerified(true);
       } catch (error) {
-        console.log(error, "this is error");
+        setPickupLocationData(false);
+        showSnackbar({
+          message: "Invalid Pickup PinCode.Try Again",
+          severity: "error",
+          duration: 3000,
+          position: { vertical: "top", horizontal: "right" },
+        });
+
         setPickupPinCodeVerified(false);
       }
     } else {
       setPickupPinCodeVerified(false);
     }
   };
-  // this is setting the location
-  console.log(
-    pickupLocationData,
-    destinationLocationData,
-    "this is pickuplocation data"
-  );
+
+
+  
   // value to get pickup and destintion address from localstorage
   useEffect(() => {
     const storedPickupAddress =
@@ -108,7 +120,7 @@ const DeliveryDetails = (props) => {
     }
   }, [editSave]);
   useEffect(() => {
-    if (  
+    if (
       showPickupDetailedAddress &&
       showDestinationDetailedAddress &&
       props?.isMobile
@@ -127,8 +139,42 @@ const DeliveryDetails = (props) => {
 
   const pickupHandleChange = (e) => {
     const { name, value } = e.target;
-    setPickupAddress((prevData) => ({ ...prevData, [name]: value }));
-    setPickupFieldValidation({});
+    let valid = true;
+
+    if (name === "contactNumber") {
+      const contactRegex = /^[789][0-9]{9}$/; // Starts with 7, 8, or 9, followed by 9 digits
+      const invalidStart = /^[1234]/; // Checks if the number starts with 1, 2, 3, or 4
+
+      if (invalidStart.test(value) || /[^0-9]/.test(value)) {
+        setPickupFieldValidation((prevState) => ({
+          ...prevState,
+          [name]: true,
+        }));
+        valid = false;
+      } else if (!contactRegex.test(value) && value !== "") {
+        setPickupFieldValidation((prevState) => ({
+          ...prevState,
+          [name]: true,
+        }));
+        valid = false;
+      }
+    }
+
+    if (name === "email") {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|pickrr\.in)$/;
+      if (!emailRegex.test(value) && value !== "") {
+        setPickupFieldValidation((prevState) => ({
+          ...prevState,
+          [name]: "Invalid email (must be @gmail.com or @pickrr.in)",
+        }));
+        valid = false;
+      }
+    }
+
+    if (valid) {
+      setPickupAddress((prevData) => ({ ...prevData, [name]: value }));
+      setPickupFieldValidation({});
+    }
   };
 
   const handleInputDestinationPincodeChange = async (e) => {
@@ -141,10 +187,21 @@ const DeliveryDetails = (props) => {
         const locationData = await dispatch(
           getLocationFromPincode(pinCode)
         ).unwrap();
-        setDestinationLocationData(locationData);
+        let reqObj = {
+          city: locationData?.location[0],
+          state: locationData?.location[1],
+        };
+        localStorage.setItem("toAddress", JSON.stringify(reqObj));
+        setDestinationLocationData(true);
         setDestinationPinCodeVerified(true);
       } catch (error) {
-        console.log(error, "this is error");
+        setDestinationLocationData(false);
+        showSnackbar({
+          message: "Invalid Destination PinCode.Try Again",
+          severity: "error",
+          duration: 3000,
+          position: { vertical: "top", horizontal: "right" },
+        });
         setDestinationPinCodeVerified(false);
       }
     } else {
@@ -154,8 +211,42 @@ const DeliveryDetails = (props) => {
 
   const destinationHandleChange = (e) => {
     const { name, value } = e.target;
-    setDestinationAddress((prevData) => ({ ...prevData, [name]: value }));
-    setDestinationFieldValidation({});
+    let valid = true;
+
+    if (name === "contactNumber") {
+      const contactRegex = /^[789][0-9]{9}$/; // Starts with 7, 8, or 9, followed by 9 digits
+      const invalidStart = /^[1234]/; // Checks if the number starts with 1, 2, 3, or 4
+
+      if (invalidStart.test(value) || /[^0-9]/.test(value)) {
+        setDestinationFieldValidation((prevState) => ({
+          ...prevState,
+          [name]: true,
+        }));
+        valid = false;
+      } else if (!contactRegex.test(value) && value !== "") {
+        setDestinationFieldValidation((prevState) => ({
+          ...prevState,
+          [name]: true,
+        }));
+        valid = false;
+      }
+    }
+
+    if (name === "email") {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|pickrr\.in)$/;
+      if (!emailRegex.test(value) && value !== "") {
+        setDestinationFieldValidation((prevState) => ({
+          ...prevState,
+          [name]: true,
+        }));
+        valid = false;
+      }
+    }
+
+    if (valid) {
+      setDestinationAddress((prevData) => ({ ...prevData, [name]: value }));
+      setDestinationFieldValidation({});
+    }
   };
 
   const textFieldStyles = {
@@ -189,7 +280,6 @@ const DeliveryDetails = (props) => {
       JSON.stringify(destinationAddress)
     );
   };
-
   const handlePickupAddbutton = () => {
     let submit = true;
     if (!pickupAddress?.name) {
@@ -200,6 +290,13 @@ const DeliveryDetails = (props) => {
       setPickupFieldValidation((prevData) => ({
         ...prevData,
         contactNumber: true,
+      }));
+      submit = false;
+    }
+    if (!pickupAddress?.warehouseName) {
+      setPickupFieldValidation((prevData) => ({
+        ...prevData,
+        warehouseName: true,
       }));
       submit = false;
     }
@@ -218,6 +315,13 @@ const DeliveryDetails = (props) => {
       setPickupFieldValidation((prevData) => ({
         ...prevData,
         consignor_business_name: true,
+      }));
+      submit = false;
+    }
+    if (!pickupLocationData) {
+      setPickupFieldValidation((prevData) => ({
+        ...prevData,
+        fromPincode: true,
       }));
       submit = false;
     }
@@ -248,6 +352,13 @@ const DeliveryDetails = (props) => {
       }));
       submit = false;
     }
+    if (!destinationAddress?.warehouseName) {
+      setDestinationFieldValidation((prevData) => ({
+        ...prevData,
+        warehouseName: true,
+      }));
+      submit = false;
+    }
     if (!destinationAddress?.email) {
       setDestinationFieldValidation((prevData) => ({
         ...prevData,
@@ -266,6 +377,13 @@ const DeliveryDetails = (props) => {
       setDestinationFieldValidation((prevData) => ({
         ...prevData,
         consignee_business_name: true,
+      }));
+      submit = false;
+    }
+    if (!destinationLocationData) {
+      setDestinationFieldValidation((prevData) => ({
+        ...prevData,
+        toAddress: true,
       }));
       submit = false;
     }
@@ -370,6 +488,7 @@ const DeliveryDetails = (props) => {
               onChange={handleInputPickupPincodeChange}
               fullWidth
               value={pickupAddress.sourcePincode || ""}
+              error={pickupFieldValidation?.fromPincode}
               sx={textFieldStyles}
               InputProps={{
                 endAdornment: (
@@ -463,38 +582,15 @@ const DeliveryDetails = (props) => {
                     sx={textFieldStyles}
                   />
                   <div className="grid-style">
-                    {fields.slice(0, 1).map((field, index) => (
+                    {fields?.map((field, index) => (
                       <TextField
                         label={field.label}
                         variant="outlined"
                         size="small"
                         className="inputField_style"
                         name={field?.name}
-                        onChange={pickupHandleChange}
-                        sx={{
-                          "& label.Mui-focused": { color: "#745be7" },
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "rgba(108,108,108)",
-                            },
-                            "&:hover fieldset": { borderColor: "#745be7" },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#745be7",
-                            },
-                          },
-                        }}
-                      />
-                    ))}
-
-                    {fields.slice(1).map((field, index) => (
-                      <TextField
-                        label={field.label}
-                        variant="outlined"
-                        size="small"
-                        className="inputField_style"
-                        name={field?.name}
-                        onChange={pickupHandleChange}
                         error={pickupFieldValidation[field.name]}
+                        onChange={pickupHandleChange}
                         sx={textFieldStyles}
                       />
                     ))}
@@ -569,6 +665,7 @@ const DeliveryDetails = (props) => {
               name="sourcePincode"
               sx={textFieldStyles}
               value={destinationAddress.sourcePincode || ""}
+              error={destinationFieldValidation?.toAddress}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -677,39 +774,16 @@ const DeliveryDetails = (props) => {
                     sx={textFieldStyles}
                   />
                   <div className="grid-style">
-                    {fields.slice(0, 1).map((field, index) => (
+                    {fields?.map((field, index) => (
                       <TextField
                         label={field.label}
                         variant="outlined"
                         size="small"
                         name={field?.name}
                         className="inputField_style"
-                        onChange={destinationHandleChange}
-                        sx={{
-                          "& label.Mui-focused": { color: "#745be7" },
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "rgba(108,108,108)",
-                            },
-                            "&:hover fieldset": { borderColor: "#745be7" },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#745be7",
-                            },
-                          },
-                        }}
-                      />
-                    ))}
-
-                    {fields.slice(1).map((field, index) => (
-                      <TextField
-                        label={field.label}
-                        variant="outlined"
-                        size="small"
-                        name={field?.name}
-                        className="inputField_style"
-                        error={destinationFieldValidation[field?.name]}
                         onChange={destinationHandleChange}
                         sx={textFieldStyles}
+                        error={destinationFieldValidation[field?.name]}
                       />
                     ))}
                   </div>

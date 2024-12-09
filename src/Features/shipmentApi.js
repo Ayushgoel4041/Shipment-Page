@@ -2,11 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiService from "../api/apiServices";
 
 export const getFramelessShipment = createAsyncThunk(
-  "cargoUrl/framelessShipment",
+  "baseUrl/framelessShipment",
   async (data, { rejectWithValue }) => {
     try {
       const response = await apiService.request(
-        "cargoUrl",
+        "baseUrl",
         "framelessShipment",
         data,
         null,

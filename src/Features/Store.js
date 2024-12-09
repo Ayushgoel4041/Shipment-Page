@@ -4,6 +4,7 @@ import CommonApi from "./CommonApi";
 import shipmentApi from "./shipmentApi";
 import paymentApi from "./paymentApi";
 import gstSlice from "./gstSlice";
+import shipmentOrderApi from "./shipmentOrderApi";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     shipmentApi: shipmentApi,
     paymentApi: paymentApi,
     gstSlice: gstSlice,
+    shipmentOrderApi: shipmentOrderApi,
     //add more reducers
   },
 });

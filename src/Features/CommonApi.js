@@ -9,21 +9,18 @@ export const getLocationFromPincode = createAsyncThunk(
       pincode: data,
       is_frameless: true,
     };
-    const token = Cookies.get("BearerToken" || "");
+    // const token = Cookies.get("BearerToken" || "");
 
-    if (!token) {
-      return rejectWithValue("No token found. Please log in.");
-    }
+    // if (!token) {
+    //   return rejectWithValue("No token found. Please log in.");
+    // }
     try {
       const response = await apiService.request(
         "baseUrl",
         "getLocationFromPincode",
         null,
         params,
-        {
-          Authorization: token ? `Bearer ${token}` : "", // Add token to Authorization header
-
-        }
+        null
       );
       return response;
     } catch (error) {

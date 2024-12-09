@@ -1,18 +1,37 @@
 import React, { useEffect, useState } from "react";
 import RbTable from "../tableComponent/RbTable";
-import { Box, Card, Paper } from "@mui/material";
+import { Box, Card } from "@mui/material";
 import VerifyFunctionality from "../VerifyContactDetails/VerifyFunctionality";
 import { useDispatch, useSelector } from "react-redux";
 import { createOrderId, createRazorPayOrder } from "../../Features/paymentApi";
 import CircularProgress from "@mui/material/CircularProgress";
 import Assets from "../../assets/Assets";
+import { showSnackbar } from "../SnackbarComponent";
+import { orderShipmentAssociationApi } from "../../Features/shipmentOrderApi";
+import moment from "moment";
+
 const CourierSelection = (props) => {
   const dispatch = useDispatch();
+
+  const pickupAddress = JSON.parse(localStorage.getItem("pickupAddress")) || {};
+  const fromAddress = JSON.parse(localStorage.getItem("fromAddress")) || {};
+  const toAddress = JSON.parse(localStorage.getItem("toAddress")) || {};
+  const valueAdded = JSON.parse(localStorage.getItem("valueAddedData")) || {};
+
+  const destinationAddress =
+    JSON.parse(localStorage.getItem("destinationAddress")) || {};
+
   const framelessData = useSelector(
     (state) => state.shipmentApi.userFramelessData
   );
+  const createOrderData = useSelector(
+    (state) => state?.shipmentOrderApi?.createOrderData
+  );
+  const orderShipmentAssociation = useSelector(
+    (state) => state?.shipmentOrderApi?.orderShipmentAssociation
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRowData, setSelectedRowData] = useState(null);
+  const [selectedRowData, setSelectedRowData] = useState([]);
   const clientDetails = JSON.parse(localStorage.getItem("clientData")) || {};
   const rateChargeData =
     useSelector((state) => state?.shipmentApi?.chargesData) || {};
@@ -20,15 +39,26 @@ const CourierSelection = (props) => {
   const [isRecharge, setIsRecharge] = useState(false);
 
   const handleOpenVerify = async () => {
-    if (framelessData?.kyc_status) {
-      createOrder();
+    if (selectedRowData && Object.keys(selectedRowData).length > 0) {
+      if (framelessData?.kyc_status) {
+        createOrder();
+      } else {
+        setOpenVerifyContact(true);
+      }
     } else {
-      setOpenVerifyContact(true);
+      showSnackbar({
+        message: "Select any courier partner",
+        severity: "error",
+        duration: 3000,
+        position: { vertical: "top", horizontal: "right" },
+      });
     }
   };
+
   useEffect(() => {
-    if (isRecharge) createOrder();
+    if (isRecharge) createShipmentAssociationApi();
   }, [isRecharge]);
+
   const createOrder = async () => {
     let reqObj = {
       amount: Math.round(selectedRowData?.rates),
@@ -36,15 +66,21 @@ const CourierSelection = (props) => {
       receipt: "",
       invoice_id: "",
       payment_capture: "1",
+      is_frameless: true,
     };
     setIsLoading(true);
     try {
       const createOrder = await dispatch(createOrderId(reqObj)).unwrap();
-      console.log(createOrder, "this is the create order thing");
       setIsLoading(false);
       openPayModal(createOrder);
     } catch (error) {
-      console.log(error, "this is the error");
+      setIsRecharge(false)
+      showSnackbar({
+        message: error,
+        severity: "error",
+        duration: 3000,
+        position: { vertical: "top", horizontal: "right" },
+      });
       setIsLoading(false);
     }
   };
@@ -56,9 +92,21 @@ const CourierSelection = (props) => {
           createRazorPayOrder(reqObj)
         ).unwrap();
         console.log(razorPayOrder, "this is the status");
+        showSnackbar({
+          message: "Payment Successful",
+          severity: "success",
+          duration: 3000,
+          position: { vertical: "top", horizontal: "right" },
+        });
         props?.setNext((current) => current + 1);
       } catch (error) {
-        console.log(error, "payment failed");
+        setIsRecharge(false)
+        showSnackbar({
+          message: "Payment Failed",
+          severity: "error",
+          duration: 3000,
+          position: { vertical: "top", horizontal: "right" },
+        });
         props?.setNext(2);
       } finally {
         setIsLoading(false);
@@ -103,23 +151,38 @@ const CourierSelection = (props) => {
     rzp1.open();
   };
 
-  console.log(
-    selectedRowData,
-    "this is the selected row data please finfg ohdifa"
-  );
-
   const handleBack = () => {
     props.setNext((current) => current - 1);
   };
-  console.log(rateChargeData, "this is the rate charty fata");
-  const pickupAddress = JSON.parse(localStorage.getItem("pickupAddress")) || {};
-  const destinationAddress =
-    JSON.parse(localStorage.getItem("destinationAddress")) || {};
-  const packageData = JSON.parse(localStorage.getItem("PackageDetails")) || [
-    {},
-  ];
-  const valueAddedData =
-    JSON.parse(localStorage.getItem("valueAddedData")) || {};
+
+  const createShipmentAssociationApi = async () => {
+    
+    let reqObj = {
+      is_frameless: true,
+      client_id: framelessData?.client_id,
+      order_id: orderShipmentAssociation?.id,
+      delivery_partner_id: parseInt(selectedRowData?.id),
+      mode_id: selectedRowData?.mode_id,
+      remarks: "remarks",
+      pickup_date_time: moment(createOrderData?.pickup_date_time).format(),
+      recipient_GST: "",
+      eway_bill_no: "",
+      to_pay_amount: "0",
+    };
+
+    try {
+      await dispatch(orderShipmentAssociationApi(reqObj)).unwrap();
+      createOrder();
+    } catch {
+      setIsRecharge(false)
+      showSnackbar({
+        message: "Something went wrong. Please try again!",
+        severity: "error",
+        duration: 3000,
+        position: { vertical: "top", horizontal: "right" },
+      });
+    }
+  };
 
   return (
     <div className="courierSelectionDesign">
@@ -135,26 +198,25 @@ const CourierSelection = (props) => {
                 style={{ display: "flex", gap: "20px", marginBottom: "10px" }}
               >
                 <div>
-                  <span className="font-bold">
-                    From :- {pickupAddress?.city} , {pickupAddress?.state}
+                  <span>
+                    <span className="font-bold">From :- </span>
+                    {fromAddress?.city} , {fromAddress?.state}
                   </span>
-                  location
                 </div>
                 <div>
                   <img src="" alt="" />
                 </div>
                 <div>
-                  <span className="font-bold">
-                    To:- {destinationAddress?.city} ,{" "}
-                    {destinationAddress?.state}
+                  <span>
+                    <span className="font-bold">To:- </span>
+                    {toAddress?.city} , {toAddress?.state}
                   </span>
-                  Location
                 </div>
               </div>
 
-              <div style={{ marginBottom: "5px" }}>
+              {/* <div style={{ marginBottom: "5px" }}>
                 Door Pickup and Door Delivery
-              </div>
+              </div> */}
               <div style={{ marginBottom: "5px" }}>
                 <span className="font-bold">Chargeable Weight:- </span>{" "}
                 {selectedRowData?.working?.chargeable_weight
@@ -163,9 +225,11 @@ const CourierSelection = (props) => {
                 KGS
               </div>
             </div>
-            <div style={{ marginBottom: "5px" }}>
-              Insured for Damage and Lost
-            </div>
+            {valueAdded?.is_insured && (
+              <div style={{ marginBottom: "5px" }}>
+                Insured for Damage and Lost
+              </div>
+            )}
           </Card>
 
           {/* table */}
@@ -183,9 +247,16 @@ const CourierSelection = (props) => {
                   additional charges might incur in case of discrepency
                 </div>
                 <div style={{ maxWidth: "1000px", fontSize: "12px" }}>
-                  You have selected (Courier Name) , order confirmed before 12PM
-                  will get scheduled for pickup on same day. Use Transporter ID
-                  (XXXXXXXXX) to generate Ewaybill
+                  You have selected{" "}
+                  {selectedRowData?.common_name
+                    ? selectedRowData?.common_name
+                    : "(Courier Name)"}
+                  , order confirmed before 12PM will get scheduled for pickup on
+                  same day. Use Transporter ID{" "}
+                  {selectedRowData?.transporter_id
+                    ? selectedRowData?.transporter_id
+                    : "XXXXXXXXX"}{" "}
+                  to generate Ewaybill
                 </div>
               </div>
 
@@ -205,6 +276,7 @@ const CourierSelection = (props) => {
               openVerifyContact={openVerifyContact}
               setOpenVerifyContact={setOpenVerifyContact}
               setIsRecharge={setIsRecharge}
+              isRecharge={isRecharge}
               {...props}
             />
           )}

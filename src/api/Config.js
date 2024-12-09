@@ -3,7 +3,7 @@ export const apiConfig = {
     otp: "https://apiv2.shiprocket.in/v1/auth/register/mobile/",
     baseUrl: "http://localhost:8000/api/",
     cargoUrl: "https://api-rocketbox.pickrr.com/api/",
-
+    stageUrl: "https://api-cargo.shiprocket.in/api/",
     //rest api end baseurls
   },
   endpoints: {
@@ -46,6 +46,19 @@ export const apiConfig = {
     gstValidateOtp:{
       url: "verify-kyc-otp/",
       method: "POST",
-    }
+    },
+    createWarehouse:{
+      url :"warehouses/",
+      method:"POST",
+    },
+    orders:{
+      url :"orders/",
+      method:"POST",
+    },
+    orderShipmentAssociation:{
+      url :"order_shipment_association/",
+      method:"POST",
+    },
+    
   },
 };

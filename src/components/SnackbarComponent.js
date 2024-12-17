@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client"; // Updated import
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
@@ -21,11 +21,13 @@ export function showSnackbar({
   document.body.appendChild(div);
 
   const handleClose = () => {
-    ReactDOM.unmountComponentAtNode(div);
+    root.unmount();
     div.remove();
   };
 
-  ReactDOM.render(
+  // Create a root and render the Snackbar
+  const root = ReactDOM.createRoot(div);
+  root.render(
     <Snackbar
       open={true}
       autoHideDuration={duration}
@@ -35,7 +37,6 @@ export function showSnackbar({
       <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }}>
         {message}
       </Alert>
-    </Snackbar>,
-    div
+    </Snackbar>
   );
 }

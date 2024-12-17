@@ -21,14 +21,21 @@ const App = () => {
   const [openVerifyContact, setOpenVerifyContact] = useState(false);
   const [userData, setUserData] = useState();
   const [intialCall, setInitialCall] = useState(true);
+  const [steps, setSteps] = useState(1);
+  const [fieldValidation, setFieldValidation] = useState({
+    packageData: false,
+    invoiceData: false,
+    pickupFieldAddress: false,
+    courier: false,
+  });
   // Function to be called when user scrolls or clicks
 
   const handleScrollOrClick = async () => {
     if (!hasScrolledOrClicked) {
       setTimeout(() => {
-        someFunction();
+        // someFunction();
         setHasScrolledOrClicked(true);
-      }, 2000);
+      }, 1000);
       window.removeEventListener("scroll", handleScrollOrClick);
       document.removeEventListener("click", handleScrollOrClick);
     }
@@ -53,18 +60,23 @@ const App = () => {
       });
     }
   };
+  useEffect(() => {}, []);
 
   useEffect(() => {
     const token = Cookies.get("BearerToken" || "");
+
+    const mobile = window.innerWidth < 860;
+
     if (token) {
       if (intialCall) {
         setInitialCall(false);
         getFramelessShipmentFunction();
       }
+    } else if (mobile) {
+      setOpenVerifyContact(true);
     } else {
       window.addEventListener("scroll", handleScrollOrClick);
       document.addEventListener("click", handleScrollOrClick);
-
       return () => {
         window.removeEventListener("scroll", handleScrollOrClick);
         document.removeEventListener("click", handleScrollOrClick);
@@ -90,6 +102,7 @@ const App = () => {
         toggleSidebar={toggleSidebar}
         setOpenFullSideBar={setOpenFullSideBar}
       />
+
       <div
         style={{
           flexGrow: 1,
@@ -100,10 +113,30 @@ const App = () => {
         }}
       >
         {!isMobile && <Steps setNext={setNext} next={next} />}
-        {next === 1 && <CreateShipment setNext={setNext} next={next} />}
-        {next === 2 && <CourierSelection setNext={setNext} />}
+        {next === 1 && (
+          <CreateShipment
+            setNext={setNext}
+            next={next}
+            steps={steps}
+            setSteps={setSteps}
+            fieldValidation={fieldValidation}
+            setFieldValidation={setFieldValidation}
+          />
+        )}
+
+        {next === 2 && (
+          <CourierSelection
+            setNext={setNext}
+            steps={steps}
+            setSteps={setSteps}
+            fieldValidation={fieldValidation}
+            setFieldValidation={setFieldValidation}
+          />
+        )}
+
         {next === 4 && <ShipParcel />}
       </div>
+
       {openVerifyContact && (
         <VerifyFunctionality
           setOpenVerifyContact={setOpenVerifyContact}

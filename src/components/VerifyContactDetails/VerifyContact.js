@@ -50,7 +50,7 @@ const VerifyContact = (props) => {
     if (/^[1-5]/.test(value)) {
       setIsTextFieldError(true);
     }
-    if (/^[789]/.test(value) || value === "") {
+    if (/^[6789]/.test(value) || value === "") {
       if (value.length === 10) {
         setPhoneNumber(value);
         setDisableButton(true);
@@ -100,6 +100,7 @@ const VerifyContact = (props) => {
           duration: 3000,
           position: { vertical: "top", horizontal: "right" },
         });
+        handleClose(); //remove it
         try {
           await dispatch(getFramelessShipment(validData)).unwrap();
           handleClose();
@@ -111,7 +112,7 @@ const VerifyContact = (props) => {
             position: { vertical: "top", horizontal: "right" },
           });
         }
-        // handleClose(); 
+        // handleClose();
       } catch (error) {
         showSnackbar({
           message: error,
@@ -139,12 +140,14 @@ const VerifyContact = (props) => {
     <div>
       <div
         className={
-          isMobile ? "reverse-style marginStyle-login" : "marginStyle-login"
+          isMobile
+            ? "reverse-style marginStyle-login login-margin-bottom-style"
+            : "marginStyle-login"
         }
       >
         {isMobile && (
           <div className="padding">
-            {/* <CloseIcon onClick={handleClose} /> */}
+            <CloseIcon onClick={handleClose} />
           </div>
         )}
         <img
@@ -270,11 +273,12 @@ const VerifyContact = (props) => {
           </div>
         </>
       )}
-
-      <div className="detail-kyc-style">
-        Enter details to Proceed for payment of Shipment from 'location' to be
-        shipped via "courier partner" at "INR 23".
-      </div>
+      {!isMobile && (
+        <div className="detail-kyc-style">
+          Please log in to enter the necessary details and proceed with your
+          first shipment
+        </div>
+      )}
     </div>
   );
 };

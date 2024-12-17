@@ -48,9 +48,6 @@ const DeliveryDetails = (props) => {
   const [opendownPickup, setOpenDownPickup] = useState(false);
   const [opendownDestination, setOpenDownDestination] = useState(false);
 
-  const [mobilePickupBox, setMobilePickupBox] = useState(true);
-  const [mobileLocalStorageValue, setMobileLocalStorageValue] = useState(false);
-
   const handleInputPickupPincodeChange = async (e) => {
     const { name, value } = e.target;
     const pinCode = e.target.value.replace(/[^0-9]/g, "");
@@ -79,104 +76,127 @@ const DeliveryDetails = (props) => {
           duration: 3000,
           position: { vertical: "top", horizontal: "right" },
         });
-
-        setPickupPinCodeVerified(false);
       }
     } else {
       setPickupPinCodeVerified(false);
     }
   };
 
-
-  
   // value to get pickup and destintion address from localstorage
   useEffect(() => {
     const storedPickupAddress =
       JSON.parse(localStorage.getItem("pickupAddress")) || {};
     if (Object?.keys(storedPickupAddress)?.length > 0) {
       setPickupAddress(storedPickupAddress);
-      setShowPickupDetailedAddress(true);
-
       if ((storedPickupAddress?.sourcePincode).length === 6) {
         setPickupPinCodeVerified(true);
+        setPickupLocationData(true);
+      }
+      if (props?.isMobile) {
+        setShowPickupDetailedAddress(false);
+      } else {
+        setShowPickupDetailedAddress(true);
       }
     }
     const storedDestinationAddress =
       JSON.parse(localStorage.getItem("destinationAddress")) || {};
     if (Object?.keys(storedDestinationAddress)?.length > 0) {
       setDestinationAddress(storedDestinationAddress);
-      setShowDestinationDetailedAddress(true);
-
       if ((storedDestinationAddress?.sourcePincode).length === 6) {
         setDestinationPinCodeVerified(true);
+        setDestinationLocationData(true);
+      }
+      if (props?.isMobile) {
+        setShowDestinationDetailedAddress(false);
+      } else {
+        setShowDestinationDetailedAddress(true);
       }
     }
-    if (
-      Object?.keys(storedPickupAddress)?.length > 0 &&
-      Object?.keys(storedDestinationAddress)?.length > 0 &&
-      props?.isMobile
-    ) {
-      setMobileLocalStorageValue(true);
-    }
   }, [editSave]);
-  useEffect(() => {
-    if (
-      showPickupDetailedAddress &&
-      showDestinationDetailedAddress &&
-      props?.isMobile
-    ) {
-      setMobileLocalStorageValue(true);
-    }
-  }, [
-    showPickupDetailedAddress,
-    showDestinationDetailedAddress,
-    props?.isMobile,
-  ]);
+
   useEffect(() => {
     if (pickupPinCodeVerified && destinationPinCodeVerified)
       setCodeConfirm(true);
   }, [pickupPinCodeVerified, destinationPinCodeVerified]);
 
-  const pickupHandleChange = (e) => {
+  const handleContactChange = (e) => {
     const { name, value } = e.target;
-    let valid = true;
+    const contactRegex = /^[789][0-9]{9}$/; // Starts with 7, 8, or 9, followed by 9 digits
+    const invalidStart = /^[1234]/; // Checks if the number starts with 1, 2, 3, or 4
 
-    if (name === "contactNumber") {
-      const contactRegex = /^[789][0-9]{9}$/; // Starts with 7, 8, or 9, followed by 9 digits
-      const invalidStart = /^[1234]/; // Checks if the number starts with 1, 2, 3, or 4
-
-      if (invalidStart.test(value) || /[^0-9]/.test(value)) {
-        setPickupFieldValidation((prevState) => ({
-          ...prevState,
-          [name]: true,
-        }));
-        valid = false;
-      } else if (!contactRegex.test(value) && value !== "") {
-        setPickupFieldValidation((prevState) => ({
-          ...prevState,
-          [name]: true,
-        }));
-        valid = false;
-      }
-    }
-
-    if (name === "email") {
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|pickrr\.in)$/;
-      if (!emailRegex.test(value) && value !== "") {
-        setPickupFieldValidation((prevState) => ({
-          ...prevState,
-          [name]: "Invalid email (must be @gmail.com or @pickrr.in)",
-        }));
-        valid = false;
-      }
-    }
-
-    if (valid) {
+    if (invalidStart.test(value) || /[^0-9]/.test(value)) {
+      setPickupFieldValidation((prevState) => ({
+        ...prevState,
+        name: true,
+      }));
+    } else if (!contactRegex.test(value) && value !== "") {
+      setPickupFieldValidation((prevState) => ({
+        ...prevState,
+        name: true,
+      }));
+    } else {
       setPickupAddress((prevData) => ({ ...prevData, [name]: value }));
       setPickupFieldValidation({});
     }
   };
+  const handledestinationContact = (e) => {
+    const { name, value } = e.target;
+    const contactRegex = /^[789][0-9]{9}$/; // Starts with 7, 8, or 9, followed by 9 digits
+    const invalidStart = /^[1234]/; // Checks if the number starts with 1, 2, 3, or 4
 
+    if (invalidStart.test(value) || /[^0-9]/.test(value)) {
+      setDestinationFieldValidation((prevState) => ({
+        ...prevState,
+        [name]: true,
+      }));
+    } else if (!contactRegex.test(value) && value !== "") {
+      setDestinationFieldValidation((prevState) => ({
+        ...prevState,
+        [name]: true,
+      }));
+    } else {
+      setDestinationAddress((prevData) => ({ ...prevData, [name]: value }));
+      setDestinationFieldValidation({});
+    }
+  };
+  const handledestintionEmail = (e) => {
+    const { name, value } = e.target;
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|pickrr\.in)$/;
+
+    if (!emailRegex.test(value) && value !== "") {
+      setDestinationFieldValidation((prevState) => ({
+        ...prevState,
+        [name]: true,
+      }));
+    } else {
+      setDestinationAddress((prevData) => ({ ...prevData, [name]: value }));
+      setDestinationFieldValidation({});
+    }
+  };
+  const handleEmailChange = (e) => {
+    const { name, value } = e.target;
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|pickrr\.in)$/;
+
+    if (!emailRegex.test(value) && value !== "") {
+      setPickupFieldValidation((prevState) => ({
+        ...prevState,
+        [name]: true,
+      }));
+    } else {
+      setPickupAddress((prevData) => ({ ...prevData, [name]: value }));
+      setPickupFieldValidation({});
+    }
+  };
+  const pickupHandleChange = (e) => {
+    const { name, value } = e.target;
+
+    setPickupAddress((prevData) => ({ ...prevData, [name]: value }));
+    setPickupFieldValidation({});
+  };
+
+  console.log(pickupAddress);
   const handleInputDestinationPincodeChange = async (e) => {
     const { name, value } = e.target;
     const pinCode = e.target.value.replace(/[^0-9]/g, "");
@@ -211,42 +231,9 @@ const DeliveryDetails = (props) => {
 
   const destinationHandleChange = (e) => {
     const { name, value } = e.target;
-    let valid = true;
 
-    if (name === "contactNumber") {
-      const contactRegex = /^[789][0-9]{9}$/; // Starts with 7, 8, or 9, followed by 9 digits
-      const invalidStart = /^[1234]/; // Checks if the number starts with 1, 2, 3, or 4
-
-      if (invalidStart.test(value) || /[^0-9]/.test(value)) {
-        setDestinationFieldValidation((prevState) => ({
-          ...prevState,
-          [name]: true,
-        }));
-        valid = false;
-      } else if (!contactRegex.test(value) && value !== "") {
-        setDestinationFieldValidation((prevState) => ({
-          ...prevState,
-          [name]: true,
-        }));
-        valid = false;
-      }
-    }
-
-    if (name === "email") {
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|pickrr\.in)$/;
-      if (!emailRegex.test(value) && value !== "") {
-        setDestinationFieldValidation((prevState) => ({
-          ...prevState,
-          [name]: true,
-        }));
-        valid = false;
-      }
-    }
-
-    if (valid) {
-      setDestinationAddress((prevData) => ({ ...prevData, [name]: value }));
-      setDestinationFieldValidation({});
-    }
+    setDestinationAddress((prevData) => ({ ...prevData, [name]: value }));
+    setDestinationFieldValidation({});
   };
 
   const textFieldStyles = {
@@ -286,7 +273,7 @@ const DeliveryDetails = (props) => {
       setPickupFieldValidation((prevData) => ({ ...prevData, name: true }));
       submit = false;
     }
-    if (!pickupAddress?.contactNumber) {
+    if (!pickupAddress?.contactNumber && pickupAddress?.contactNumber !== 10) {
       setPickupFieldValidation((prevData) => ({
         ...prevData,
         contactNumber: true,
@@ -325,14 +312,18 @@ const DeliveryDetails = (props) => {
       }));
       submit = false;
     }
+
     if (submit) {
-      setPickupAddress((prevData) => ({ ...prevData, pickupFieldValidation }));
-      setShowPickupDetailedAddress(true);
-      setOpenDownPickup(false);
-      setPickUpAddressLocalStorgae();
       if (props?.isMobile) {
-        setMobilePickupBox(false);
+        setShowPickupDetailedAddress(false);
+
+        props?.handleNextStep();
+      } else {
+        setShowPickupDetailedAddress(true);
+        setOpenDownPickup(false);
       }
+      setPickupAddress((prevData) => ({ ...prevData }));
+      setPickUpAddressLocalStorgae();
     }
   };
 
@@ -388,6 +379,13 @@ const DeliveryDetails = (props) => {
       submit = false;
     }
     if (submit) {
+      if (props?.isMobile) {
+        setShowDestinationDetailedAddress(false);
+        props?.handleNextStep();
+      } else {
+        setShowDestinationDetailedAddress(true);
+        setOpenDownDestination(false);
+      }
       setDestinationAddress((prevData) => ({
         ...prevData,
         destinationFieldValidation,
@@ -396,22 +394,21 @@ const DeliveryDetails = (props) => {
         ...prevData,
         destinationFieldAddress: false,
       }));
-      setMobileLocalStorageValue(true);
-      setShowDestinationDetailedAddress(true);
-      setOpenDownDestination(false);
+
       setDestinationAddressLocalStorage();
     }
   };
-  const handleClickEditPincode = (id) => {
+  const handleClickEditDetails = (id) => {
     if (id === 1) {
       localStorage.removeItem("pickupAddress");
+      setOpenPickupEditBox(true);
       setPickupAddress({});
-      setShowPickupDetailedAddress(false);
+      // setShowPickupDetailedAddress(false);
       setPickupPinCodeVerified(false);
     } else if (id === 2) {
       localStorage.removeItem("destinationAddress");
       setDestinationAddress({});
-      setShowDestinationDetailedAddress(false);
+      // setShowDestinationDetailedAddress(false);
       setDestinationPinCodeVerified(false);
     }
   };
@@ -433,10 +430,13 @@ const DeliveryDetails = (props) => {
     pickupAddress,
     destinationAddress,
   ]);
+
   useEffect(() => {
     if (props?.isMobile) {
       setCodeConfirm(true);
       setOpenDownPickup(true);
+      setShowPickupDetailedAddress(false);
+      setShowDestinationDetailedAddress(false);
       setOpenDownDestination(true);
     }
   }, [props?.isMobile]);
@@ -463,9 +463,17 @@ const DeliveryDetails = (props) => {
         <div>
           <EditIcon
             style={{ cursor: "pointer" }}
-            onClick={() => setOpenPickupEditBox(true)}
+            onClick={() => handleClickEditDetails(1)}
           />
         </div>
+        {openPickupEditBox && (
+          <EditDeliveryDetails
+            pickupAddress={pickupAddress}
+            openPickupEditBox={openPickupEditBox}
+            setOpenPickupEditBox={setOpenPickupEditBox}
+            setEditSave={setEditSave}
+          />
+        )}
       </Box>
     );
   };
@@ -496,11 +504,11 @@ const DeliveryDetails = (props) => {
                     {pickupPinCodeVerified && (
                       <>
                         {/* <EditIcon
-                  color="action"
-                  fontSize="small"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleClickEditPincode(1)}
-                />{" "} */}
+                          color="action"
+                          fontSize="small"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleClickEditPincode(1)}
+                        />{" "} */}
                         <CheckIcon
                           color="success"
                           style={{ cursor: "pointer" }}
@@ -533,6 +541,7 @@ const DeliveryDetails = (props) => {
                     rows={"4"}
                     className="inputField_style"
                     name="pickupAddress"
+                    value={pickupAddress.pickupAddress || ""}
                     onChange={pickupHandleChange}
                     // disabled={!confirm}
                     onFocus={() => setOpenDownPickup(true)}
@@ -577,11 +586,12 @@ const DeliveryDetails = (props) => {
                     size="small"
                     className="inputField_style"
                     name="consignor_business_name"
+                    value={pickupAddress.consignor_business_name || ""}
                     onChange={pickupHandleChange}
                     error={pickupFieldValidation?.consignor_business_name}
                     sx={textFieldStyles}
                   />
-                  <div className="grid-style">
+                  <div className={!props?.isMobile && "grid-style"}>
                     {fields?.map((field, index) => (
                       <TextField
                         label={field.label}
@@ -589,8 +599,15 @@ const DeliveryDetails = (props) => {
                         size="small"
                         className="inputField_style"
                         name={field?.name}
+                        value={pickupAddress[field.name] || ""}
                         error={pickupFieldValidation[field.name]}
-                        onChange={pickupHandleChange}
+                        onChange={
+                          pickupAddress[field.name] === "contactNumber"
+                            ? handleContactChange
+                            : pickupAddress[field.name] === "email"
+                            ? handleEmailChange
+                            : pickupHandleChange
+                        }
                         sx={textFieldStyles}
                       />
                     ))}
@@ -598,20 +615,22 @@ const DeliveryDetails = (props) => {
                 </Collapse>
               )}
             </TransitionGroup>
-            <TransitionGroup>
-              {opendownPickup && (
-                <Collapse in={opendownPickup} timeout={800}>
-                  <div className="addDiv_Style">
-                    <div
-                      className="Add_Submit_button_style"
-                      onClick={handlePickupAddbutton}
-                    >
-                      Add & Submit
+            {!props?.isMobile && (
+              <TransitionGroup>
+                {opendownPickup && (
+                  <Collapse in={opendownPickup} timeout={800}>
+                    <div className="addDiv_Style">
+                      <div
+                        className="Add_Submit_button_style"
+                        onClick={handlePickupAddbutton}
+                      >
+                        Add & Submit
+                      </div>
                     </div>
-                  </div>
-                </Collapse>
-              )}
-            </TransitionGroup>
+                  </Collapse>
+                )}
+              </TransitionGroup>
+            )}
           </>
         )}
       </Grid>
@@ -640,9 +659,17 @@ const DeliveryDetails = (props) => {
         <div>
           <EditIcon
             style={{ cursor: "pointer" }}
-            onClick={() => setOpenDestinationEditBox(true)}
+            onClick={() => handleClickEditDetails(2)}
           />
         </div>
+        {openDestinationEditBox && (
+          <EditDeliveryDetails
+            destinationAddress={destinationAddress}
+            openDestinationEditBox={openDestinationEditBox}
+            setOpenDestinationEditBox={setOpenDestinationEditBox}
+            setEditSave={setEditSave}
+          />
+        )}
       </Box>
     );
   };
@@ -671,12 +698,12 @@ const DeliveryDetails = (props) => {
                   <InputAdornment position="end">
                     {destinationPinCodeVerified && (
                       <>
-                        {/* EditIcon<
-                        color="action"
-                        fontSize="small"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => handleClickEditPincode(2)}
-                      />{" "} */}
+                        {/* <EditIcon
+                          color="action"
+                          fontSize="small"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleClickEditPincode(2)}
+                        />{" "} */}
                         <CheckIcon
                           color="success"
                           style={{ cursor: "pointer" }}
@@ -696,22 +723,6 @@ const DeliveryDetails = (props) => {
           </>
         )}
 
-        {openPickupEditBox && (
-          <EditDeliveryDetails
-            pickupAddress={pickupAddress}
-            openPickupEditBox={openPickupEditBox}
-            setOpenPickupEditBox={setOpenPickupEditBox}
-            setEditSave={setEditSave}
-          />
-        )}
-        {openDestinationEditBox && (
-          <EditDeliveryDetails
-            destinationAddress={destinationAddress}
-            openDestinationEditBox={openDestinationEditBox}
-            setOpenDestinationEditBox={setOpenDestinationEditBox}
-            setEditSave={setEditSave}
-          />
-        )}
         {!showDestinationDetailedAddress && (
           <>
             <TransitionGroup>
@@ -725,6 +736,7 @@ const DeliveryDetails = (props) => {
                     rows={"4"}
                     name="deliveredAddress"
                     onChange={destinationHandleChange}
+                    value={destinationAddress?.deliveredAddress || ""}
                     disabled={!confirm}
                     className="inputField_style"
                     onFocus={() => setOpenDownDestination(true)}
@@ -769,11 +781,12 @@ const DeliveryDetails = (props) => {
                     size="small"
                     className="inputField_style"
                     name="consignee_business_name"
+                    value={destinationAddress?.consignee_business_name || ""}
                     onChange={destinationHandleChange}
                     error={destinationFieldValidation?.consignee_business_name}
                     sx={textFieldStyles}
                   />
-                  <div className="grid-style">
+                  <div className={!props?.isMobile && "grid-style"}>
                     {fields?.map((field, index) => (
                       <TextField
                         label={field.label}
@@ -781,7 +794,16 @@ const DeliveryDetails = (props) => {
                         size="small"
                         name={field?.name}
                         className="inputField_style"
-                        onChange={destinationHandleChange}
+                        onChange={
+                          destinationFieldValidation[field?.name] ===
+                          "contactNumber"
+                            ? handledestinationContact
+                            : destinationFieldValidation[field?.name] ===
+                              "email"
+                            ? handledestintionEmail
+                            : destinationHandleChange
+                        }
+                        value={destinationAddress[field?.name] || ""}
                         sx={textFieldStyles}
                         error={destinationFieldValidation[field?.name]}
                       />
@@ -790,20 +812,22 @@ const DeliveryDetails = (props) => {
                 </Collapse>
               )}
             </TransitionGroup>
-            <TransitionGroup>
-              {opendownDestination && (
-                <Collapse in={opendownDestination} timeout={800}>
-                  <div className="addDiv_Style">
-                    <div
-                      className="Add_Submit_button_style"
-                      onClick={handleDestinationPickup}
-                    >
-                      Add & Submit
+            {!props?.isMobile && (
+              <TransitionGroup>
+                {opendownDestination && (
+                  <Collapse in={opendownDestination} timeout={800}>
+                    <div className="addDiv_Style">
+                      <div
+                        className="Add_Submit_button_style"
+                        onClick={handleDestinationPickup}
+                      >
+                        Add & Submit
+                      </div>
                     </div>
-                  </div>
-                </Collapse>
-              )}
-            </TransitionGroup>
+                  </Collapse>
+                )}
+              </TransitionGroup>
+            )}
           </>
         )}
       </Grid>
@@ -811,35 +835,12 @@ const DeliveryDetails = (props) => {
   };
   return (
     <Card className="card-style">
-      {" "}
-      {props?.isMobile && (
-        <div className="top-stepper-style">{props?.steps}/3</div>
-      )}
       {props?.isMobile ? (
         <div>
-          {mobileLocalStorageValue ? (
+          {props?.steps === 1 && (
             <>
-              <div className="Heading-style">Pickup and Delivery Address</div>
-              <Grid container spacing={{ lg: 8, md: 4, xs: 2 }}>
-                <Grid
-                  item
-                  className="pickup-address-style flex-style-column"
-                  xs={12}
-                  md={6}
-                  lg={6}
-                >
-                  {detailedPickupAddressBox()}
-                </Grid>
-                <Grid
-                  item
-                  className="pickup-address-style flex-style-column"
-                  xs={12}
-                  md={6}
-                  lg={6}
-                >
-                  {detailedDestinationAddressBox()}
-                </Grid>
-              </Grid>
+              <div className="Heading-style">Pickup Address</div>
+              {pickupAddressbox()}
               <div className="click-page">
                 {props?.steps !== 1 && (
                   <div
@@ -849,31 +850,42 @@ const DeliveryDetails = (props) => {
                     Back
                   </div>
                 )}
-                {props?.steps !== 3 && (
+                {props?.steps !== 4 && (
                   <div
                     className="next-click-on-page"
-                    onClick={() => props?.steps < 3 && props?.handleNextStep()}
+                    onClick={() => props?.steps < 4 && handlePickupAddbutton()}
                   >
                     Next
                   </div>
                 )}
               </div>
             </>
-          ) : (
+          )}
+          {props?.steps === 2 && (
             <>
-              {mobilePickupBox ? (
-                <>
-                  <div className="Heading-style">Pickup Address</div>
-
-                  {pickupAddressbox()}
-                </>
-              ) : (
-                <>
-                  {" "}
-                  <div className="Heading-style">Delivery Address</div>
-                  {destinationAddressBox()}
-                </>
-              )}
+              {" "}
+              <div className="Heading-style">Delivery Address</div>
+              {destinationAddressBox()}
+              <div className="click-on-page">
+                {props?.steps !== 1 && (
+                  <div
+                    className="back-click-on-page"
+                    onClick={() => props?.steps > 1 && props?.handleBackStep()}
+                  >
+                    Back
+                  </div>
+                )}
+                {props?.steps !== 4 && (
+                  <div
+                    className="next-click-on-page"
+                    onClick={() =>
+                      props?.steps < 4 && handleDestinationPickup()
+                    }
+                  >
+                    Next
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>

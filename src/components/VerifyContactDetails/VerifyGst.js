@@ -9,7 +9,8 @@ import OTPInput from "react-otp-input";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { CloudUpload, WatchLater } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
-
+import DoneIcon from "@mui/icons-material/Done";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
   gstRequestOtp,
   gstValidateOtp,
@@ -30,7 +31,9 @@ const VerifyGst = (props) => {
   const [verifyOtp, setVerifyOtp] = useState(false);
   const [otp, setOtp] = useState("");
   const [counter, setCounter] = useState(60 * 30);
-
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreview2, setImgaePreview2] = useState(null);
+  const [isDocUpload, setIsDocUpload] = useState([]);
   setInterval(() => setCounter(counter - 1), 1000);
   useEffect(() => {
     if (width < 890) {
@@ -48,22 +51,58 @@ const VerifyGst = (props) => {
   const handleManuallUploadClick = () => {
     setOpenUploadDocument(true);
   };
+  const handleEnterGstNumber = () => {
+    setOpenUploadDocument(false);
+  };
+  const handleDocUpload = (id) => {
+    setIsDocUpload((prev) => {
+      if (!prev.includes(id)) {
+        return [...prev, id];
+      }
+      return prev;
+    });
+  };
 
   const handleBoxClick = () => {
     document.getElementById("file-input").click();
   };
   // console.log(fileName, "this is the uploaded files");
 
-  const handleUploadFile = (event) => {
+  const handleUploadFile = (event, id) => {
+    if (id === 1) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    if (id === 2) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setImgaePreview2(reader.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     const selectedFiles = event.target.files;
     const fileArray = Array.from(selectedFiles).map((file) => file.name);
     setFileName((prev) => [...prev, ...fileArray]);
   };
+
   const handleUploadButton = () => {
     setFileUploaded(true);
   };
-
-
+  useEffect(() => {
+    if (isDocUpload.includes(1) && isDocUpload.includes(2)) {
+      handleUploadButton();
+    }
+  }, [isDocUpload]);
   const handleManualGstVerify = async () => {
     setLoading(true);
     const clientDetails = JSON.parse(localStorage.getItem("clientData")) || {};
@@ -117,16 +156,15 @@ const VerifyGst = (props) => {
 
       try {
         const requestOtp = await dispatch(gstRequestOtp(data)).unwrap();
-        console.log(requestOtp, "this is the response of request otp ");
+
         showSnackbar({
           message: requestOtp?.message,
           severity: "success",
           duration: 5000,
           position: { vertical: "top", horizontal: "right" },
         });
-      } catch (error) {
+      } catch {
         setVerifyOtp(false);
-        console.log(error, "tjos os<<<<<,------");
 
         showSnackbar({
           message: "Something Went Wrong. Please Try Again!",
@@ -155,7 +193,7 @@ const VerifyGst = (props) => {
 
       try {
         const validData = await dispatch(gstValidateOtp(userData)).unwrap();
-        console.log(validData, "this is the respinse of valid data");
+
         props?.setIsRecharge(!props.isRecharge);
         // props?.setNext((current) => current + 1);
         showSnackbar({
@@ -176,12 +214,26 @@ const VerifyGst = (props) => {
       }
     }
   };
+  const handleDeleteImage = (id) => {
+    if (id === 1) {
+      setImagePreview(null);
+    } else {
+      setImgaePreview2(null);
+    }
+  };
   const truncateText = (text, maxLength) => {
     if (text.length > maxLength) {
       return text.substring(0, 10) + "...." + text.slice(-10); // 10 characters at start and end
     }
     return text;
   };
+  const handleShowImage = (base64String) => {
+    const newWindow = window.open();
+    newWindow.document.write(
+      `<img src="${base64String}" alt="Base64 Image" />`
+    );
+  };
+
   return (
     <div>
       <div
@@ -201,7 +253,7 @@ const VerifyGst = (props) => {
         />
       </div>
       <Box>
-        {!verifyOtp && <div className="form-title">Verify GST Number</div>}
+        {!verifyOtp && <div className="form-title">Verify GSTIN</div>}
 
         {verifyOtp ? (
           <>
@@ -260,147 +312,244 @@ const VerifyGst = (props) => {
         ) : (
           <>
             {/* {!openUploadDocument && ( */}
-            <div style={{ margin: "20px 0px" }}>
-              <TextField
-                label="Enter Gst Number"
-                variant="outlined"
-                fullWidth
-                size="medium"
-                onChange={handleGstField}
-                error={isError}
-                sx={{
-                  "& label.Mui-focused": { color: "#745be7" },
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": { borderColor: "#745be7" },
-                    "&:hover fieldset": { borderColor: "#745be7" },
-                    "&.Mui-focused fieldset": { borderColor: "#745be7" },
-                  },
-                }}
-              />
-            </div>
-            <Box
-              textAlign="center"
-              my={1}
-              style={{ display: "flex", justifycontent: "center" }}
-            >
-              <hr
-                style={{
-                  border: "none",
-                  borderTop: "1px solid #888",
-                  width: "40%",
-                  display: "inline-block",
-                }}
-              />
-              <span
-                style={{
-                  margin: "0 10px",
-                  color: "#888",
-                  fontSize: "14px",
-                }}
-              >
-                OR
-              </span>
-              <hr
-                style={{
-                  border: "none",
-                  borderTop: "1px solid #888",
-                  width: "40%",
-                  display: "inline-block",
-                }}
-              />
-            </Box>
+            {openUploadDocument ? null : ( // </div> //   Enter GST Number // > //   onClick={handleEnterGstNumber} //   className="manually-upload-style" // <div
+              <>
+                <div style={{ margin: "20px 0px" }}>
+                  <TextField
+                    label="Enter Gst Number"
+                    variant="outlined"
+                    fullWidth
+                    size="medium"
+                    onChange={handleGstField}
+                    error={isError}
+                    sx={{
+                      "& label.Mui-focused": { color: "#745be7" },
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "#745be7" },
+                        "&:hover fieldset": { borderColor: "#745be7" },
+                        "&.Mui-focused fieldset": { borderColor: "#745be7" },
+                      },
+                    }}
+                  />
+                </div>
+                <Box
+                  textAlign="center"
+                  my={1}
+                  style={{ display: "flex", justifycontent: "center" }}
+                >
+                  <hr
+                    style={{
+                      border: "none",
+                      borderTop: "1px solid #888",
+                      width: "40%",
+                      display: "inline-block",
+                    }}
+                  />
+                  <span
+                    style={{
+                      margin: "0 10px",
+                      color: "#888",
+                      fontSize: "14px",
+                    }}
+                  >
+                    OR
+                  </span>
+                  <hr
+                    style={{
+                      border: "none",
+                      borderTop: "1px solid #888",
+                      width: "40%",
+                      display: "inline-block",
+                    }}
+                  />
+                </Box>
+              </>
+            )}
+
             {/* )} */}
 
-            {/* <div className="error-handling-style">{error}</div> */}
-            {fileUploaded ? (
-              <div>
-                <span className="businessName-style">Document Uploaded: </span>
-                <span>{truncateText(fileName, 20)}</span>
-              </div>
-            ) : (
-              <>
-                {openUploadDocument ? (
-                  <Box className="box-uploader-Style">
-                    <div
-                      onClick={handleBoxClick}
-                      className="flex-col-center-style"
-                    >
-                      <div>
-                        <CloudUpload style={{ fontSize: "60px" }} />
+            {openUploadDocument ? (
+              // <Box className="box-uploader-Style">
+              //   <div
+              //     onClick={handleBoxClick}
+              //     className="flex-col-center-style"
+              //   >
+              //     <div>
+              //       <CloudUpload style={{ fontSize: "60px" }} />
+              //     </div>
+              //     <div>
+              //       <input
+              //         type="file"
+              //         id="file-input"
+              //         accept="image/*"
+              //         style={{ display: "none" }}
+              //         onChange={handleUploadFile}
+              //         multiple
+              //       />
+              //     </div>
+              //     {imagePreview && (
+              //       <div style={{ marginTop: "20px" }}>
+              //         <img
+              //           src={imagePreview}
+              //           alt="Selected Preview"
+              //           style={{
+              //             maxWidth: "100%",
+              //             height: "auto",
+              //             borderRadius: "10px",
+              //           }}
+              //         />
+              //       </div>
+              //     )}
+              //     {fileName?.length > 0 ? (
+              //       <div>
+              //         <div className="uploaded-file-text-style">
+              //           <span>Uploaded File:</span>{" "}
+              //           <span style={{ color: "#745be7" }}>
+              //             <ul>
+              //               {fileName?.map((name, index) => {
+              //                 const truncate = (text, maxLength) => {
+              //                   if (text.length > maxLength) {
+              //                     return (
+              //                       text.substring(0, 10) +
+              //                       "...." +
+              //                       text.slice(-10)
+              //                     );
+              //                   }
+              //                   return text;
+              //                 };
+
+              //                 return (
+              //                   <li
+              //                     key={index}
+              //                     style={{ color: "#745be7" }}
+              //                   >
+              //                     {truncate(name, 20)}
+              //                   </li>
+              //                 );
+              //               })}
+              //             </ul>
+              //           </span>
+              //         </div>
+              //       </div>
+              //     ) : (
+              //       <div>Click here to upload a file</div>
+              //     )}
+              //   </div>
+              //   {fileName?.length > 0 && (
+              //     <div
+              //       className="upload-button font-style"
+              //       onClick={handleUploadButton}
+              //     >
+              //       Upload
+              //     </div>
+              //   )}
+              // </Box>
+              <Box className="document-box-head-style">
+                <div className="documnet-box-style">
+                  <div className="doc1-style">Document 1</div>
+                  <div>
+                    {imagePreview ? (
+                      <div
+                        onClick={() => handleShowImage(imagePreview)}
+                        className="preview-doc-style"
+                      >
+                        Preview
                       </div>
+                    ) : (
                       <div>
                         <input
                           type="file"
                           id="file-input"
-                          style={{ display: "none" }}
-                          onChange={handleUploadFile}
-                          multiple
+                          accept="image/*"
+                          onChange={(e) => handleUploadFile(e, 1)}
                         />
                       </div>
-                      {fileName?.length > 0 ? (
-                        <div>
-                          <div className="uploaded-file-text-style">
-                            <span>Uploaded File:</span>{" "}
-                            <span style={{ color: "#745be7" }}>
-                              <ul>
-                                {fileName?.map((name, index) => {
-                                  const truncate = (text, maxLength) => {
-                                    if (text.length > maxLength) {
-                                      return (
-                                        text.substring(0, 10) +
-                                        "...." +
-                                        text.slice(-10)
-                                      );
-                                    }
-                                    return text;
-                                  };
-
-                                  return (
-                                    <li
-                                      key={index}
-                                      style={{ color: "#745be7" }}
-                                    >
-                                      {truncate(name, 20)}
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </span>
+                    )}
+                  </div>
+                  {/* <div>Upload</div> */}
+                  {isDocUpload.includes(1) ? (
+                    <div className="uploaded-style-doc">Uploaded</div>
+                  ) : (
+                    <>
+                      {imagePreview && (
+                        <div className="icons-style-doc">
+                          <div>
+                            <DeleteIcon onClick={() => handleDeleteImage(1)} />
+                          </div>
+                          <div>
+                            <DoneIcon
+                              onClick={() => handleDocUpload(1)}
+                              color="success"
+                            />
                           </div>
                         </div>
-                      ) : (
-                        <div>Click here to upload a file</div>
                       )}
-                    </div>
-                    {fileName?.length > 0 && (
+                    </>
+                  )}
+                </div>
+                <div className="documnet-box-style">
+                  <div className="doc1-style">Document 2</div>
+                  <div>
+                    {imagePreview2 ? (
                       <div
-                        className="upload-button font-style"
-                        onClick={handleUploadButton}
+                        onClick={() => handleShowImage(imagePreview2)}
+                        className="preview-doc-style"
                       >
-                        Upload
+                        Preview
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="file"
+                          id="file-input"
+                          accept="image/*"
+                          label=""
+                          onChange={(e) => handleUploadFile(e, 2)}
+                        />
                       </div>
                     )}
-                  </Box>
-                ) : (
-                  <div
-                    className="manually-upload-style"
-                    onClick={handleManuallUploadClick}
-                  >
-                    Manually Upload Document{" "}
-                    <span style={{ marginLeft: "7px" }}>
-                      <FileUploadIcon />{" "}
-                    </span>
                   </div>
-                )}
-              </>
+                  {/* <div>Upload</div> */}
+                  {isDocUpload.includes(2) ? (
+                    <div className="uploaded-style-doc">Uploaded</div>
+                  ) : (
+                    <>
+                      {imagePreview2 && (
+                        <div className="icons-style-doc">
+                          <div>
+                            <DeleteIcon onClick={() => handleDeleteImage(2)} />
+                          </div>
+                          <div>
+                            <DoneIcon
+                              onClick={() => handleDocUpload(2)}
+                              color="success"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </Box>
+            ) : (
+              <div
+                className="manually-upload-style"
+                onClick={handleManuallUploadClick}
+              >
+                Manually Upload Document{" "}
+                <span style={{ marginLeft: "7px" }}>
+                  <FileUploadIcon />{" "}
+                </span>
+              </div>
             )}
+
             <div
               className="continue-button font-style"
               onClick={() => {
                 fileUploaded ? handleManualGstVerify() : handleOtpRequest();
               }}
             >
-              {loading ? "hey" : "Continue"}
+              {loading ? "Please Wait..." : "Continue"}
             </div>
           </>
         )}

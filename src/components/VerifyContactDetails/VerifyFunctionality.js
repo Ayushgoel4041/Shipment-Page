@@ -40,7 +40,7 @@ const VerifyFunctionality = (props) => {
               )}
             </div>
             {isMobile && (
-              <div className="image-login-mobile-style">
+              <div className={props?.verifyContact === true ?"image-login-mobile-style":"image-gst-mobile-style"}>
                 <img src={Assets.loginImageMobile} />
               </div>
             )}

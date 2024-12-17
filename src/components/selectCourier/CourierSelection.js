@@ -9,9 +9,16 @@ import Assets from "../../assets/Assets";
 import { showSnackbar } from "../SnackbarComponent";
 import { orderShipmentAssociationApi } from "../../Features/shipmentOrderApi";
 import moment from "moment";
+import CardTable from "../tableComponent/CardTable";
+import MobileStepper from "../stepsCount/MobileStepper";
 
 const CourierSelection = (props) => {
   const dispatch = useDispatch();
+  const [isMobile, setIsMobile] = useState(false);
+  const width = window.innerWidth;
+  useEffect(() => {
+    setIsMobile(width < 900);
+  }, [width]);
 
   const pickupAddress = JSON.parse(localStorage.getItem("pickupAddress")) || {};
   const fromAddress = JSON.parse(localStorage.getItem("fromAddress")) || {};
@@ -38,6 +45,9 @@ const CourierSelection = (props) => {
   const [openVerifyContact, setOpenVerifyContact] = useState(false);
   const [isRecharge, setIsRecharge] = useState(false);
 
+  useEffect(()=>{
+    if(isMobile){props?.setSteps(4)}
+  },[isMobile])
   const handleOpenVerify = async () => {
     if (selectedRowData && Object.keys(selectedRowData).length > 0) {
       if (framelessData?.kyc_status) {
@@ -46,6 +56,8 @@ const CourierSelection = (props) => {
         setOpenVerifyContact(true);
       }
     } else {
+      setOpenVerifyContact(true); //remove
+
       showSnackbar({
         message: "Select any courier partner",
         severity: "error",
@@ -74,7 +86,7 @@ const CourierSelection = (props) => {
       setIsLoading(false);
       openPayModal(createOrder);
     } catch (error) {
-      setIsRecharge(false)
+      setIsRecharge(false);
       showSnackbar({
         message: error,
         severity: "error",
@@ -100,7 +112,7 @@ const CourierSelection = (props) => {
         });
         props?.setNext((current) => current + 1);
       } catch (error) {
-        setIsRecharge(false)
+        setIsRecharge(false);
         showSnackbar({
           message: "Payment Failed",
           severity: "error",
@@ -153,10 +165,10 @@ const CourierSelection = (props) => {
 
   const handleBack = () => {
     props.setNext((current) => current - 1);
+    if(isMobile)props?.setSteps(3)
   };
 
   const createShipmentAssociationApi = async () => {
-    
     let reqObj = {
       is_frameless: true,
       client_id: framelessData?.client_id,
@@ -174,7 +186,7 @@ const CourierSelection = (props) => {
       await dispatch(orderShipmentAssociationApi(reqObj)).unwrap();
       createOrder();
     } catch {
-      setIsRecharge(false)
+      setIsRecharge(false);
       showSnackbar({
         message: "Something went wrong. Please try again!",
         severity: "error",
@@ -192,25 +204,40 @@ const CourierSelection = (props) => {
         </Box>
       ) : (
         <>
+          {isMobile && (
+            // <div style={{position:'fixed',left:'0',right:'0'}}>
+            <div>
+              <MobileStepper setSteps={props?.setSteps} steps={props?.steps} />
+            </div>
+          )}
+
           <Card className="card-style noPaperStyle width-fit-card">
             <div>
               <div
-                style={{ display: "flex", gap: "20px", marginBottom: "10px" }}
+                style={{
+                  display: "flex",
+                  marginBottom: "10px",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+                className=""
               >
                 <div>
-                  <span>
-                    <span className="font-bold">From :- </span>
-                    {fromAddress?.city} , {fromAddress?.state}
-                  </span>
+                  <div className="font-bold">From :- </div>
+                  <div className="content-add-style"> {fromAddress?.city}</div>
+                  <div className="content-add-style">{fromAddress?.state}</div>
+                </div>
+                <div className="track-image-div-style">
+                  <img
+                    src={Assets.deliveryTruck}
+                    alt="delivery Truck"
+                    className="image-truck-style"
+                  />
                 </div>
                 <div>
-                  <img src="" alt="" />
-                </div>
-                <div>
-                  <span>
-                    <span className="font-bold">To:- </span>
-                    {toAddress?.city} , {toAddress?.state}
-                  </span>
+                  <div className="font-bold">To:- </div>
+                  <div className="content-add-style">{toAddress?.city}</div>
+                  <div className="content-add-style">{toAddress?.state}</div>
                 </div>
               </div>
 
@@ -218,11 +245,15 @@ const CourierSelection = (props) => {
                 Door Pickup and Door Delivery
               </div> */}
               <div style={{ marginBottom: "5px" }}>
-                <span className="font-bold">Chargeable Weight:- </span>{" "}
-                {selectedRowData?.working?.chargeable_weight
-                  ? selectedRowData?.working?.chargeable_weight
-                  : "XX"}{" "}
-                KGS
+                <div className="font-bold">
+                  Chargeable Weight:-
+                  <span className="content-add-style">
+                    {selectedRowData?.working?.chargeable_weight
+                      ? selectedRowData?.working?.chargeable_weight
+                      : "XX"}{" "}
+                    KGS
+                  </span>
+                </div>
               </div>
             </div>
             {valueAdded?.is_insured && (
@@ -234,10 +265,19 @@ const CourierSelection = (props) => {
 
           {/* table */}
           <Card className="table-courier-style noPaperStyle">
+            {/* {!isMobile ? (
+              <CardTable
+                tableData={rateChargeData}
+                setSelectedRowData={setSelectedRowData}
+              />
+            ) : ( */}
             <RbTable
               tableData={rateChargeData}
               setSelectedRowData={setSelectedRowData}
+              selectedRowData={selectedRowData}
+              isMobile={isMobile}
             />
+            {/* )} */}
           </Card>
           <Card className="card-style noPaperStyle">
             <div className="bottom-courier-box">
@@ -248,14 +288,20 @@ const CourierSelection = (props) => {
                 </div>
                 <div style={{ maxWidth: "1000px", fontSize: "12px" }}>
                   You have selected{" "}
-                  {selectedRowData?.common_name
-                    ? selectedRowData?.common_name
-                    : "(Courier Name)"}
+                  <span style={{ fontWeight: "700" }}>
+                    {selectedRowData?.common_name
+                      ? selectedRowData?.common_name
+                      : "(Courier Name)"}
+                  </span>
                   , order confirmed before 12PM will get scheduled for pickup on
-                  same day. Use Transporter ID{" "}
-                  {selectedRowData?.transporter_id
-                    ? selectedRowData?.transporter_id
-                    : "XXXXXXXXX"}{" "}
+                  same day. Use{" "}
+                  <span style={{ fontWeight: "700" }}>
+                    {" "}
+                    Transporter ID{" "}
+                    {selectedRowData?.transporter_id
+                      ? selectedRowData?.transporter_id
+                      : "XXXXXXXXX"}{" "}
+                  </span>
                   to generate Ewaybill
                 </div>
               </div>
@@ -277,6 +323,9 @@ const CourierSelection = (props) => {
               setOpenVerifyContact={setOpenVerifyContact}
               setIsRecharge={setIsRecharge}
               isRecharge={isRecharge}
+              selectedRowData={selectedRowData}
+              fromAddress={fromAddress}
+              toAddress={toAddress}
               {...props}
             />
           )}

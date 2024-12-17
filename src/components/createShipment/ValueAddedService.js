@@ -8,6 +8,7 @@ import {
   FormControlLabel,
   Checkbox,
   Box,
+  Collapse,
 } from "@mui/material";
 import SwitchComponent from "../SwitchComponent";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,6 +22,7 @@ import {
 } from "../../Features/shipmentOrderApi";
 
 import moment from "moment/moment";
+import { TransitionGroup } from "react-transition-group";
 
 const ValueAddedService = (props) => {
   const dispatch = useDispatch();
@@ -28,7 +30,7 @@ const ValueAddedService = (props) => {
   const [valueAddedService, setValueAddedService] = useState({
     secureShipment: false,
     appointmentDelivery: false,
-    poNumber: false,
+    cod: false,
   });
   const framelessData = useSelector(
     (state) => state.shipmentApi.userFramelessData
@@ -89,7 +91,7 @@ const ValueAddedService = (props) => {
 
   const handleNext = async () => {
     setLoading(true);
-    await createPickupWarehouse();
+    await callChargeApi();
   };
 
   const createPickupWarehouse = async () => {
@@ -199,8 +201,8 @@ const ValueAddedService = (props) => {
         length: pkg?.length || 0,
         height: pkg?.height || 0,
         weight: pkg?.weight || 0,
-        width: pkg?.width || 0,
         unit: pkg?.dimension || "",
+        width: pkg?.width || 0,
       })),
       invoice_value: parseFloat(invoiceData?.invoiceAmount),
       to_warehouse_id: parseInt(toWarehouseData?.id),
@@ -210,17 +212,22 @@ const ValueAddedService = (props) => {
         toWarehouseData?.contact_person_contact_no,
       no_of_units: parseInt(invoiceData?.totalUnit),
       invoice_number: invoiceData?.invoiceNumber || undefined,
-      is_insured: valueAddedData?.is_insured || false,
-      is_appointment_taken: valueAddedData?.is_appointment_taken,
+      is_insured: valueAddedService?.secureShipment || false,
+      is_appointment_taken: valueAddedService?.appointmentDelivery,
       is_created_via_clone: false,
       invoice_date: moment(invoiceDate).format("YYYY-MM-DD"),
       mode_name: "surface", //initial value
-      cod_payment_mode: "cash", //intial valwu
       is_to_pay: false, //intial valwu
-      is_cod: false, //intial valwu
+      is_cod: valueAddedService?.cod, //intial valwu
+      cod_amount: valueAddedService?.cod ? formValues?.amount : 0,
+      pickup_appointment_date:
+        valueAddedService?.appointmentDelivery && formValues?.appointmentDate
+          ? formValues?.appointmentDate
+          : "",
+
+      // cod_payment_mode: "cash", //intial valwu
 
       // cheque_in_favor_of: cheque_in_favor_of,
-      // cod_amount: codCheck ? cod_val : 0,
       // package_content: packageValue,
       // supporting_docs: invoiceDocs,
       // is_auto_assign: autoAssignCheck || false,
@@ -253,7 +260,7 @@ const ValueAddedService = (props) => {
     const data = {
       is_insured: valueAddedService?.secureShipment,
       is_to_pay: false,
-      is_cod: false,
+      is_cod: valueAddedService?.cod,
       is_appointment_taken: valueAddedService?.appointmentDelivery,
       calculator_page: "true",
       from_pincode: pickupAddress?.sourcePincode,
@@ -288,66 +295,191 @@ const ValueAddedService = (props) => {
       setLoading(false);
     }
   };
-
-  return (
-    <div>
-      {loading ? (
-        <Box className="loading-container">
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <Card
-            className={
-              props?.fieldValidation?.packageData &&
-              props?.fieldValidation?.invoiceData
-                ? "card-style"
-                : "card-style-disable"
-            }
-          >
-            {props?.isMobile && (
-              <div className="top-stepper-style">{props?.steps}/3</div>
-            )}
-            <div
-              className={
-                props?.fieldValidation?.packageData &&
+  const bodyContent = () => {
+    return (
+      <>
+        <div
+          className={
+            isMobile
+              ? "Heading-style"
+              : props?.fieldValidation?.packageData &&
                 props?.fieldValidation?.invoiceData
-                  ? "Heading-style"
-                  : "Heading-style font-disable-color"
-              }
-            >
-              Value Added Services
-            </div>
-            <Grid container spacing={2} className="grid-container-box">
-              <Grid
-                item
-                className="flex-style-value"
-                lg={5.5}
-                md={5.5}
-                sm={12}
-                xs={12}
+              ? "Heading-style"
+              : "Heading-style font-disable-color"
+          }
+        >
+          Value Added Services
+        </div>
+        <Grid
+          container
+          spacing={props?.isMobile ? 0 : 1}
+          className="grid-container-box"
+          style={props?.isMobile ? { marginLeft: "-16px" } : {}}
+        >
+          <Grid
+            item
+            className="flex-style-value"
+            lg={5.5}
+            md={5.5}
+            sm={12}
+            xs={12}
+          >
+            <div className="switchComponent-style">
+              <div
+                className={
+                  isMobile
+                    ? "value-added-text"
+                    : props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                    ? "value-added-text"
+                    : "value-added-text font-disable-color"
+                }
               >
-                <div className="switchComponent-style">
-                  <div
-                    className={
-                      props?.fieldValidation?.packageData &&
+                Secure Shipment:
+              </div>
+              <SwitchComponent
+                type="IOSSwitch"
+                onChange={() => handleToggle("secureShipment")}
+                disable={
+                  (props?.fieldValidation?.packageData &&
+                    props?.fieldValidation?.invoiceData) ||
+                  isMobile
+                }
+              />
+            </div>
+
+            <div className="switchComponent-style">
+              <div
+                className={
+                  isMobile
+                    ? "value-added-text"
+                    : props?.fieldValidation?.packageData &&
                       props?.fieldValidation?.invoiceData
-                        ? "value-added-text"
-                        : "value-added-text font-disable-color"
-                    }
-                  >
-                    Secure Shipment:
+                    ? "value-added-text"
+                    : "value-added-text font-disable-color"
+                }
+              >
+                Cash On Delivery:
+              </div>
+              <SwitchComponent
+                type="IOSSwitch"
+                onChange={() => handleToggle("cod")}
+                disable={
+                  (props?.fieldValidation?.packageData &&
+                    props?.fieldValidation?.invoiceData) ||
+                  isMobile
+                }
+              />
+            </div>
+
+            {valueAddedService?.cod && props?.isMobile && (
+              <div className="display-flex-input-field-style">
+                <div className="value-added-text-input">Enter Amount:</div>
+                <TextField
+                  label="Enter Amount"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  sx={textFieldStyles}
+                  name="amount"
+                  value={formValues.amount}
+                  error={valueAddedService.secureShipment && !formValues.amount}
+                  onChange={handleInputChange}
+                />
+              </div>
+            )}
+
+            <div className="switchComponent-style">
+              <div
+                className={
+                  isMobile
+                    ? "value-added-text"
+                    : props?.fieldValidation?.packageData &&
+                      props?.fieldValidation?.invoiceData
+                    ? "value-added-text"
+                    : "value-added-text font-disable-color"
+                }
+              >
+                Appointment Delivery:
+              </div>
+              <SwitchComponent
+                type="IOSSwitch"
+                onChange={() => handleToggle("appointmentDelivery")}
+                disable={
+                  (props?.fieldValidation?.packageData &&
+                    props?.fieldValidation?.invoiceData) ||
+                  isMobile
+                }
+              />
+            </div>
+
+            {valueAddedService?.appointmentDelivery && props?.isMobile && (
+              <div className="switchComponent-style-po-date-style">
+                <div className="display-flex-input-field-style">
+                  <div className="value-added-text-input-text-style">
+                    Select Date:
                   </div>
-                  <SwitchComponent
-                    type="IOSSwitch"
-                    onChange={() => handleToggle("secureShipment")}
-                    disable={
-                      props?.fieldValidation?.packageData &&
-                      props?.fieldValidation?.invoiceData
+                  <TextField
+                    variant="outlined"
+                    type="date"
+                    fullWidth
+                    size="small"
+                    sx={textFieldStyles}
+                    name="appointmentDate"
+                    value={formValues.appointmentDate}
+                    error={
+                      valueAddedService.appointmentDelivery &&
+                      !formValues.appointmentDate
                     }
+                    onChange={handleInputChange}
                   />
                 </div>
-                {valueAddedService?.secureShipment && props?.isMobile && (
+
+                <div className="display-flex-input-field-style">
+                  <div className="value-added-text-input-text-style">
+                    Enter PO:
+                  </div>
+                  <TextField
+                    label="Enter PO"
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    sx={textFieldStyles}
+                    name="poNumber"
+                    error={valueAddedService.poNumber && !formValues.poNumber}
+                    value={formValues.poNumber}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            )}
+          </Grid>
+          {props?.isMobile ? null : (
+            <Grid
+              item
+              lg={1}
+              md={1}
+              sm={12}
+              xs={12}
+              style={{
+                display: isMobile ? "block" : "flex",
+                margin: isMobile && "10px 0px 30px",
+              }}
+            >
+              <Divider orientation={isMobile ? "horizontal" : "vertical"} />
+            </Grid>
+          )}
+          {!props?.isMobile && (
+            <Grid
+              item
+              className="flex-style-value"
+              lg={5.5}
+              md={5.5}
+              sm={12}
+              xs={12}
+            >
+              <>
+                {valueAddedService?.cod && (
                   <div className="switchComponent-style">
                     <div className="value-added-text-input">Enter Amount:</div>
                     <TextField
@@ -366,223 +498,141 @@ const ValueAddedService = (props) => {
                   </div>
                 )}
 
-                <div className="switchComponent-style">
-                  <div
-                    className={
-                      props?.fieldValidation?.packageData &&
-                      props?.fieldValidation?.invoiceData
-                        ? "value-added-text"
-                        : "value-added-text font-disable-color"
-                    }
-                  >
-                    Appointment Delivery:
-                  </div>
-                  <SwitchComponent
-                    type="IOSSwitch"
-                    onChange={() => handleToggle("appointmentDelivery")}
-                    disable={
-                      props?.fieldValidation?.packageData &&
-                      props?.fieldValidation?.invoiceData
-                    }
-                  />
-                </div>
-                {valueAddedService?.appointmentDelivery && props?.isMobile && (
-                  <div className="switchComponent-style">
-                    <div className="value-added-text-input">Select Date:</div>
-                    <TextField
-                      variant="outlined"
-                      type="date"
-                      fullWidth
-                      size="small"
-                      sx={textFieldStyles}
-                      name="appointmentDate"
-                      value={formValues.appointmentDate}
-                      error={
-                        valueAddedService.appointmentDelivery &&
-                        !formValues.appointmentDate
-                      }
-                      onChange={handleInputChange}
-                    />
+                {valueAddedService?.appointmentDelivery && (
+                  <div className="switchComponent-style-po-date-style">
+                    <div className="display-flex-input-field-style">
+                      <div className="value-added-text-input-text-style">
+                        Select Date:
+                      </div>
+                      <TextField
+                        variant="outlined"
+                        type="date"
+                        fullWidth
+                        size="small"
+                        sx={textFieldStyles}
+                        name="appointmentDate"
+                        value={formValues.appointmentDate}
+                        error={
+                          valueAddedService.appointmentDelivery &&
+                          !formValues.appointmentDate
+                        }
+                        onChange={handleInputChange}
+                      />
+                    </div>
+
+                    <div className="display-flex-input-field-style">
+                      <div className="value-added-text-input-text-style">
+                        Enter PO:
+                      </div>
+                      <TextField
+                        label="Enter PO"
+                        variant="outlined"
+                        fullWidth
+                        size="small"
+                        sx={textFieldStyles}
+                        name="poNumber"
+                        error={
+                          valueAddedService.poNumber && !formValues.poNumber
+                        }
+                        value={formValues.poNumber}
+                        onChange={handleInputChange}
+                      />
+                    </div>
                   </div>
                 )}
-                <div className="switchComponent-style">
-                  <div
-                    className={
-                      props?.fieldValidation?.packageData &&
-                      props?.fieldValidation?.invoiceData
-                        ? "value-added-text"
-                        : "value-added-text font-disable-color"
-                    }
-                  >
-                    PO Number:
-                  </div>
-                  <SwitchComponent
-                    type="IOSSwitch"
-                    onChange={() => handleToggle("poNumber")}
-                    disable={
-                      props?.fieldValidation?.packageData &&
-                      props?.fieldValidation?.invoiceData
-                    }
-                  />
-                </div>
-                {valueAddedService?.poNumber && props?.isMobile && (
-                  <div className="switchComponent-style">
-                    <div className="value-added-text-input">Enter PO:</div>
-                    <TextField
-                      label="Enter PO"
-                      variant="outlined"
-                      fullWidth
-                      size="small"
-                      sx={textFieldStyles}
-                      name="poNumber"
-                      error={valueAddedService.poNumber && !formValues.poNumber}
-                      value={formValues.poNumber}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                )}
-              </Grid>
-
-              <Grid
-                item
-                lg={1}
-                md={1}
-                sm={12}
-                xs={12}
-                style={{
-                  display: isMobile ? "block" : "flex",
-                  margin: isMobile && "10px 0px 30px",
-                }}
-              >
-                <Divider orientation={isMobile ? "horizontal" : "vertical"} />
-              </Grid>
-
-              <Grid
-                item
-                className="flex-style-value"
-                lg={5.5}
-                md={5.5}
-                sm={12}
-                xs={12}
-              >
-                {!props?.isMobile && (
-                  <>
-                    {valueAddedService?.secureShipment && (
-                      <div className="switchComponent-style">
-                        <div className="value-added-text-input">
-                          Enter Amount:
-                        </div>
-                        <TextField
-                          label="Enter Amount"
-                          variant="outlined"
-                          fullWidth
-                          size="small"
-                          sx={textFieldStyles}
-                          name="amount"
-                          value={formValues.amount}
-                          error={
-                            valueAddedService.secureShipment &&
-                            !formValues.amount
-                          }
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    )}
-
-                    {valueAddedService?.appointmentDelivery && (
-                      <div className="switchComponent-style">
-                        <div className="value-added-text-input">
-                          Select Date:
-                        </div>
-                        <TextField
-                          variant="outlined"
-                          type="date"
-                          fullWidth
-                          size="small"
-                          sx={textFieldStyles}
-                          name="appointmentDate"
-                          value={formValues.appointmentDate}
-                          error={
-                            valueAddedService.appointmentDelivery &&
-                            !formValues.appointmentDate
-                          }
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    )}
-
-                    {valueAddedService?.poNumber && (
-                      <div className="switchComponent-style">
-                        <div className="value-added-text-input">Enter PO:</div>
-                        <TextField
-                          label="Enter PO"
-                          variant="outlined"
-                          fullWidth
-                          size="small"
-                          sx={textFieldStyles}
-                          name="poNumber"
-                          error={
-                            valueAddedService.poNumber && !formValues.poNumber
-                          }
-                          value={formValues.poNumber}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </Grid>
+              </>
             </Grid>
-
-            {props?.isMobile && (
-              <div className="click-on-page">
-                {props?.steps !== 1 && (
-                  <div
-                    className="back-click-on-page"
-                    onClick={() => props?.steps > 1 && props?.handleBackStep()}
-                  >
-                    Back
-                  </div>
-                )}
-                {props?.steps !== 3 && (
+          )}
+        </Grid>
+        {props?.isMobile && (
+          <div className="click-on-page">
+            {props?.steps !== 1 && (
+              <div
+                className="back-click-on-page"
+                onClick={() => props?.steps > 1 && props?.handleBackStep()}
+              >
+                Back
+              </div>
+            )}
+            {props?.steps !== 4 && (
+              <>
+                {(props?.fieldValidation?.packageData &&
+                  props?.fieldValidation?.invoiceData &&
+                  props?.fieldValidation?.pickupFieldAddress) ||
+                !props?.fieldValidation?.courier ? (
                   <div
                     className="next-click-on-page"
-                    onClick={() => props?.steps < 3 && props?.handleNextStep()}
+                    onClick={() => handleNext()}
+                  >
+                    Next
+                  </div>
+                ) : (
+                  <div
+                    className="disable-next-click-on-page"
+                    // onClick={() => props?.steps < 4 && props?.handleNextStep()}
                   >
                     Next
                   </div>
                 )}
-              </div>
+              </>
             )}
-          </Card>
-          <div className="text-center">
-            <FormControlLabel
-              control={<Checkbox defaultChecked />}
-              className="privacy-policy-style"
-              label="By procedding you agree to SR Cargo's Terms Of Service and Privacy Policy."
-              sx={{
-                "& .MuiFormControlLabel-label": {
-                  textAlign: "left",
-                  fontSize: "16px",
-                  fontWeight: "700",
-                  color: "black",
-                },
-              }}
-            />
-            <div className="save-select-courier-div">
-              {props?.fieldValidation?.packageData &&
-              props?.fieldValidation?.invoiceData &&
-              props?.fieldValidation?.pickupFieldAddress ? (
-                <div onClick={handleNext} className="save-select-button">
-                  Save and Select Courier
-                </div>
-              ) : (
-                <div className="save-select-button save-select-button-disable">
-                  Save and Select Courier
-                </div>
-              )}
-            </div>
           </div>
+        )}
+      </>
+    );
+  };
+  return (
+    <div>
+      {loading ? (
+        <Box className="loading-container">
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {props?.isMobile ? (
+            <div style={{ marginTop: "-20px" }}>{bodyContent()}</div>
+          ) : (
+            <>
+              <Card
+                className={
+                  props?.fieldValidation?.packageData &&
+                  props?.fieldValidation?.invoiceData
+                    ? "card-style"
+                    : "card-style-disable"
+                }
+              >
+                {bodyContent()}
+              </Card>
+              <div className="text-center">
+                <FormControlLabel
+                  control={<Checkbox defaultChecked />}
+                  className="privacy-policy-style"
+                  label="By procedding you agree to SR Cargo's Terms Of Service and Privacy Policy."
+                  sx={{
+                    "& .MuiFormControlLabel-label": {
+                      textAlign: "left",
+                      fontSize: isMobile ? "12px" : "16px",
+                      fontWeight: "700",
+                      color: "black",
+                    },
+                  }}
+                />
+                <div className="save-select-courier-div">
+                  {props?.fieldValidation?.packageData &&
+                  props?.fieldValidation?.invoiceData &&
+                  props?.fieldValidation?.pickupFieldAddress ? (
+                    <div onClick={handleNext} className="save-select-button">
+                      Save and Select Courier
+                    </div>
+                  ) : (
+                    <div className="save-select-button save-select-button-disable">
+                      Save and Select Courier
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

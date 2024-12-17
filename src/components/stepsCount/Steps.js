@@ -72,7 +72,7 @@ const Steps = ({ next, setNext }) => {
 
         {renderStep(
           4,
-          "Ship Parcel",
+          "Ship Cargo",
           Assets.UnselectShipParcel,
           Assets.SelectShiparcel
         )}

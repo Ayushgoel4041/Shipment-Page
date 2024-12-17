@@ -3,28 +3,24 @@ import DeliveryDetails from "./DeliveryDetails";
 import InvoiceDetails from "./InvoiceDetails";
 import ValueAddedService from "./ValueAddedService";
 import useCurrentWidth from "../../CurrentWidth/UseCurrentWidth";
+import MobileStepper from "../stepsCount/MobileStepper";
 
 const CreateShipment = (props) => {
-  const [steps, setSteps] = useState(1);
+  // const [steps, setSteps] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
-  const [fieldValidation, setFieldValidation] = useState({
-    packageData: false,
-    invoiceData: false,
-    pickupFieldAddress: false,
-  });
+
 
   const width = useCurrentWidth();
-  useEffect(() => {
-    console.log(fieldValidation, "this is the field validation in the system");
-  }, [fieldValidation]);
+
 
   const handleNextStep = () => {
-    setSteps((current) => current + 1);
+    props?.setSteps((current) => current + 1);
   };
 
   const handleBackStep = () => {
-    setSteps((current) => current - 1);
+    props?.setSteps((current) => current - 1);
   };
+
   useEffect(() => {
     if (width < 850) setIsMobile(true);
     else setIsMobile(false);
@@ -34,58 +30,61 @@ const CreateShipment = (props) => {
     <div className="background-color-info-head">
       {isMobile ? (
         <>
-          {steps === 1 && (
+          {/* <div style={{position:'fixed',left:'0',right:'0'}}>
+           */}
+<div>            <MobileStepper setSteps={props?.setSteps} steps={props?.steps} />
+          </div>
+          {(props?.steps === 1 || props?.steps === 2) && (
             <DeliveryDetails
               isMobile={isMobile}
-              setSteps={setSteps}
-              steps={steps}
+              setSteps={props?.setSteps}
+              steps={props?.steps}
               handleNextStep={handleNextStep}
               handleBackStep={handleBackStep}
-              fieldValidation={fieldValidation}
-              setFieldValidation={setFieldValidation}
+              fieldValidation={props?.fieldValidation}
+              setFieldValidation={props?.setFieldValidation}
             />
           )}
-          {steps === 2 && (
+          {props?.steps === 3 && (
             <InvoiceDetails
               isMobile={isMobile}
-              setSteps={setSteps}
-              steps={steps}
+              setSteps={props?.setSteps}
+              steps={props?.steps}
               handleNextStep={handleNextStep}
               handleBackStep={handleBackStep}
-              fieldValidation={fieldValidation}
-              setFieldValidation={setFieldValidation}
-              
+              fieldValidation={props?.fieldValidation}
+              setFieldValidation={props?.setFieldValidation}
+              {...props}
             />
           )}
-          {steps === 3 && (
-            <ValueAddedService
-              isMobile={isMobile}
-              setSteps={setSteps}
-              steps={steps}
-              handleNextStep={handleNextStep}
-              handleBackStep={handleBackStep}
-              fieldValidation={fieldValidation}
-              setFieldValidation={setFieldValidation}
-              {...props} 
-            />
-          )}
+
+          {/* <ValueAddedService
+            isMobile={isMobile}
+            setSteps={props?.setSteps}
+            steps={props?.steps}
+            handleNextStep={handleNextStep}
+            handleBackStep={handleBackStep}
+            fieldValidation={fieldValidation}
+            setFieldValidation={setFieldValidation}
+            {...props}
+          /> */}
         </>
       ) : (
         <>
           <DeliveryDetails
             isMobile={isMobile}
-            fieldValidation={fieldValidation}
-            setFieldValidation={setFieldValidation}
+            fieldValidation={props?.fieldValidation}
+            setFieldValidation={props?.setFieldValidation}
           />
           <InvoiceDetails
             isMobile={isMobile}
-            fieldValidation={fieldValidation}
-            setFieldValidation={setFieldValidation}
+            fieldValidation={props?.fieldValidation}
+            setFieldValidation={props?.setFieldValidation}
           />
           <ValueAddedService
             isMobile={isMobile}
-            fieldValidation={fieldValidation}
-            setFieldValidation={setFieldValidation}
+            fieldValidation={props?.fieldValidation}
+            setFieldValidation={props?.setFieldValidation}
             {...props}
           />
         </>
